@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import admin from '../firebaseAdmin';
+import admin from '../firebaseAdmin.js';
 
 const authMiddleware = async (req: Request, res: Response, next: NextFunction) => {
   const authorizationHeader = req.headers.authorization;

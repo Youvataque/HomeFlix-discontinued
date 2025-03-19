@@ -1,33 +1,7 @@
 import { exec } from 'child_process';
 import axios from 'axios';
-import fs from 'fs';
-import path from 'path';
-import { isValidJson } from '../tools';
-
-const JSON_FILE_PATH = path.join(__dirname, '../../specData.json');
-
-/////////////////////////////////////////////////////////////////////////////////
-// interface pour la lisibilité du code
-interface infoSpec {
-	cpu: string, 
-	fan: string,
-	ram: string,
-	storage: string
-}
-
-interface MediaItem {
-	cpu:string,
-	fan:string,
-	ram: string,
-	storage: string
-	dlSpeed:string,
-	vpnActive: boolean,
-	nbUser: string
-}
-
-interface DataStructure {
-	spec:  MediaItem;
-}
+import { infoSpec, SpecItem } from '../interfaces.js';
+import { specDb } from '../tools.js';
 
 /////////////////////////////////////////////////////////////////////////////////
 // récupère les informations système de l'ordinateur pour les afficher dans l'app
@@ -123,33 +97,29 @@ async function getNbUser(): Promise<string> {
 // lances toutes les fonctions précédente et enregistre leurs résultats dans une section du json
 async function runAllChecks() {
 	try {
-		const data = await fs.promises.readFile(JSON_FILE_PATH, 'utf8');
-		const jsonData: DataStructure = JSON.parse(data);
 		const systemInfo = await getSystemInfo();
-		jsonData.spec.cpu = systemInfo.cpu;
-		jsonData.spec.fan = systemInfo.fan;
-		jsonData.spec.ram = systemInfo.ram;
-		jsonData.spec.storage = systemInfo.storage;
-		jsonData.spec.vpnActive = await checkVpnStatus();
-		jsonData.spec.dlSpeed = await getQbittorrentStats();
-		jsonData.spec.nbUser = await getNbUser();
-
-		const jsonString = JSON.stringify(jsonData, null, 2);
-		if (isValidJson(jsonString)) {
-			await fs.promises.writeFile(JSON_FILE_PATH, jsonString, { encoding: 'utf8', flag: 'w' });
-			console.log('\x1b[32mSpecs ajoutés avec succès au json\x1b[0m');
-		} else {
-			console.error('\x1b[31mJSON mal formé, écriture annulée\x1b[0m');
-		}
+		const jsonData: SpecItem = {
+			cpu: systemInfo.cpu,
+			fan: systemInfo.fan,
+			ram: systemInfo.ram,
+			storage: systemInfo.storage,
+			vpnActive: await checkVpnStatus(),
+			dlSpeed: await getQbittorrentStats(),
+			nbUser: await getNbUser()
+		};
+		specDb.read();
+		specDb.data = { spec: jsonData };
+		specDb.write();
+		console.log("\x1b[32mDonnées de performances mises à jour avec succès :\x1b[0m");
 	} catch (err) {
-		console.error(`\x1b[31mErreur lors de la lecture ou de l\'écriture du fichier JSON : ${err}\x1b[0m`);
+		console.error(`\x1b[31mErreur lors de l'écriture du fichier JSON : ${err}\x1b[0m`);
 	}
 }
 
 /////////////////////////////////////////////////////////////////////////////////
 // lance le listener
 export function startSpecWatcher(): void {
-	setInterval(runAllChecks, 6000);
-	console.log(`Surveillance du dossier des performances en cours`);
+	setInterval(runAllChecks, 4000);
+	console.log(`Surveillance des performances en cours !`);
 }
   

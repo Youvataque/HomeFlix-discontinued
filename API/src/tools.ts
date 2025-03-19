@@ -1,12 +1,14 @@
-/////////////////////////////////////////////////////////////////////////////////
-
 import axios from "axios";
+import { DataStructure, FileSystemItem } from "./interfaces.js";
+import { LowSync } from 'lowdb';
+import { JSONFileSync } from 'lowdb/node';
 
-// Définition de l'interface servant à la lecture du contenu d'un dossier (ls -l)
-interface FileSystemItem {
-    name: string;
-    type: 'file' | 'directory';
-}
+/////////////////////////////////////////////////////////////////////////////////
+// initialisation de la DB
+const adapter = new JSONFileSync<DataStructure>('./contentData.json');
+export const db = new LowSync<DataStructure>(adapter, { tv: {}, movie: {}, queue: {} });
+const adapter2 = new JSONFileSync('./specData.json');
+export const specDb = new LowSync(adapter2, { spec: {} });
 
 /////////////////////////////////////////////////////////////////////////////////
 // mots à retirer des noms de fichiers
@@ -138,6 +140,9 @@ export function getMimeType(filePath:string) {
     return mimeTypes[extension] || 'application/octet-stream';
 }
 
+/////////////////////////////////////////////////////////////////////////////////
+// Fonction pour récupérer les éléments dans la source à partir d'un numéro
+// de "page" et d'un "nom"
 export const fetchSourceFunc = async (page: number, name: string) => {
     try {
         const response = await axios.get(`http://localhost:1337/api/fetchContent?page=${page}&name=${name}`);
@@ -148,6 +153,9 @@ export const fetchSourceFunc = async (page: number, name: string) => {
     }
 };
 
+/////////////////////////////////////////////////////////////////////////////////
+// Fonction pour récupérer le lien de téléchargement du .torrent depuis la 
+// source pour un "id" donné
 export const fetchSrcUrl = async (id: string) => {
     try {
         const response = await axios.get(`http://localhost:1337/api/downloadUrl?id=${id}`);

@@ -1,10 +1,10 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import fs from 'fs';
-import path from 'path';
 import dotenv from 'dotenv';
-import { deleteAllTorrent, deleteOneTorrent, removeFromJson, searchContent, searchTorrent } from '../actions';
-import { getMimeType, isValidJson } from "../tools";
-import authMiddleware from './authMiddleware';
+import { deleteAllTorrent, deleteOneTorrent, removeFromJson, searchContent, searchTorrent } from '../actions.js';
+import { db, getMimeType, isValidJson, specDb } from "../tools.js";
+import authMiddleware from './authMiddleware.js';
+import { DataStructure } from '../interfaces.js';
 
 dotenv.config();
 const router: Router = Router();
@@ -12,64 +12,46 @@ const router: Router = Router();
 /////////////////////////////////////////////////////////////////////////////////
 // Route pour récupérer des données de contenu
 router.get('/contentStatus', authMiddleware,(req: Request, res: Response) => {
-	const filePath = path.join(__dirname, '../../contentData.json');
-	fs.readFile(filePath, 'utf8', (err, data) => {
-		if (err) {
-			res.status(500).json({ error: 'Erreur lors de la lecture du fichier JSON' });
-			return;
-		}
-		res.json(JSON.parse(data));
-	});
+	db.read();
+	res.json(db.data);
 });
 
 /////////////////////////////////////////////////////////////////////////////////
 // Route pour récupérer des données de spec
 router.get('/specStatus', authMiddleware,(req: Request, res: Response) => {
-	const filePath = path.join(__dirname, '../../specData.json');
-	fs.readFile(filePath, 'utf8', (err, data) => {
-		if (err) {
-			res.status(500).json({ error: 'Erreur lors de la lecture du fichier JSON 2' });
-			return;
-		}
-		res.json(JSON.parse(data));
-	});
+	specDb.read();
+	res.json(specDb.data);
 });
 
 /////////////////////////////////////////////////////////////////////////////////
 // Route pour ajouter des données
 router.post('/contentStatus', authMiddleware, (req: Request, res: Response) => {
-	const filePath = path.join(__dirname, '../../contentData.json');
-	const {newData, where} = req.body;
-	let countDelay: number = 0;
+	try {
+		const { newData, where } = req.body;
 
-	fs.readFile(filePath, 'utf8', (err, data) => {
-		if (err) {
-			res.status(500).json({ error: 'Erreur lors de la lecture du fichier JSON' });
-			return;
+		if (!where || !['queue', 'tv', 'movie'].includes(where)) {
+			return res.status(400).json({ error: 'Clé invalide pour where' });
 		}
-		while (!isValidJson(data) && countDelay < 10) {
-			console.error('\x1b[31mJSON invalide nouvelle tentative dans 2s !\x1b[0m');
-			setTimeout(() => {}, 2000);
-			countDelay++;
+		if (!newData || !newData.id) {
+			return res.status(400).json({ error: "L'élément doit avoir un ID" });
 		}
-		const jsonData = JSON.parse(data);
-		jsonData[where][newData['id']] = {
+
+		db.read();
+		db.data[where as keyof DataStructure][newData.id] = {
 			"title": newData["title"],
-			"originalTitle": newData['originalTitle'],
-			"name": newData['name'],
-			"media": newData['media'],
-			"percent": newData['percent'],
-			"seasons": newData['seasons']
-		}
+			"originalTitle": newData["originalTitle"],
+			"name": newData["name"],
+			"media": newData["media"],
+			"percent": newData["percent"],
+			"seasons": newData["seasons"]
+		};
+		db.write();
+		res.status(201).json({ message: 'Données ajoutées avec succès' });
 
-		fs.writeFile(filePath, JSON.stringify(jsonData, null, 2), 'utf8', (err) => {
-			if (err) {
-				res.status(500).json({ error: 'Erreur lors de l\'écriture du fichier JSON' });
-				return;
-			}
-			res.status(201).json({ message: 'Données ajoutées avec succès' });
-		});
-	});
+	} catch (err) {
+		console.error(`\x1b[31mErreur dans /contentStatus: ${err}\x1b[0m`);
+		res.status(500).json({ error: 'Erreur interne du serveur' });
+	}
 });
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -77,14 +59,14 @@ router.post('/contentStatus', authMiddleware, (req: Request, res: Response) => {
 router.post('/contentErase', authMiddleware, async (req: Request, res: Response) => {
 	const {newData} = req.body;
 	let del = false;
+	db.read();
 	if (newData['media']) {
 		const torrentHash = await searchTorrent(newData["name"]);
 		del = await deleteOneTorrent(torrentHash);
 	} else {
 		del = await deleteAllTorrent(newData);
 	}
-	if (del) await removeFromJson(newData["media"] ? "movie" : "tv", newData["id"]);
-    
+	if (del) await removeFromJson(newData["media"] ? "movie" : "tv", newData["id"], db);
 });
 
 /////////////////////////////////////////////////////////////////////////////////

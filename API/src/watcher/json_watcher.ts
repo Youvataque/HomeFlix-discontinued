@@ -1,27 +1,10 @@
-import fs from 'fs';
-import path from 'path';
 import dotenv from 'dotenv';
-import { qbittorrentAPI, removeFromJson, searchTorrent } from '../actions';
+import { qbittorrentAPI, removeFromJson, searchTorrent } from '../actions.js';
+import { DataStructure } from '../interfaces.js';
+import { db } from '../tools.js';
 
 dotenv.config();
 const DIRECTORY_TO_WATCH = process.env.CONTENT_FOLDER ?? "";
-const JSON_CONTENT_PATH = path.join(__dirname, '../../contentData.json');
-
-/////////////////////////////////////////////////////////////////////////////////
-// interface  pour faciliter la lisibilité
-interface MediaItem {
-	title: string;
-	originalTitle: string;
-	name: string;
-	media: boolean;
-	percent:number;
-}
-
-interface DataStructure {
-	tv: Record<string, MediaItem>;
-	movie: Record<string, MediaItem>;
-	queue: Record<string, MediaItem>;
-}
 
 /////////////////////////////////////////////////////////////////////////////////
 // fonction pour récupérer toutes les infos d'un torrent
@@ -51,8 +34,8 @@ async function getTorrentProgress(torrentName: string,): Promise<number | undefi
 async function checkAndProcessQueue() {
 	let countError: number = 0;
 	try {
-		const data = await fs.promises.readFile(JSON_CONTENT_PATH, 'utf8');
-		const jsonData: DataStructure = JSON.parse(data);
+		db.read();
+		const jsonData: DataStructure = db.data;
 		if (Object.keys(jsonData.queue).length === 0) return;
 
 		for (const key in jsonData.queue) {
@@ -65,9 +48,8 @@ async function checkAndProcessQueue() {
 			else if (percent == undefined && countError !== 3) {
 				countError++;
 			} else {
-				removeFromJson("queue", key);
+				removeFromJson("queue", key, db);
 			}
-			
 			if (item.percent >= 99.5) { 
 				if (item.media) {
 					jsonData.movie[key] = item;
@@ -79,15 +61,16 @@ async function checkAndProcessQueue() {
 				console.log(`\x1b[33mEncore du boulot : ${percent}\x1b[0m`);
 			}
 		}
-
 		try {
-			await fs.promises.writeFile(JSON_CONTENT_PATH, JSON.stringify(jsonData, null, 2), 'utf8');
-			console.log('\x1b[32mFichier JSON mis à jour avec succès\x1b[0m');
+			db.read();
+			db.data = jsonData;
+			db.write();
+			console.log('\x1b[32mDB mise à jour avec succès\x1b[0m');
 		} catch (err) {
-			console.error(`\x1b[31mErreur lors de l\'écriture du fichier JSON : ${err}\x1b[0m`);
+			console.error(`\x1b[31mErreur lors de la mise à jour de la DB : ${err}\x1b[0m`);
 		}
 	} catch (err) {
-		console.error(`\x1b[31mErreur lors de la lecture du fichier JSON : ${err}\x1b[0m`);
+		console.error(`\x1b[31mErreur lors de la lecture de la DB: ${err}\x1b[0m`);
 	}
 }
 

@@ -4,7 +4,7 @@
   "main": "src/app.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "ts-node-dev --respawn --transpile-only src/app.ts"
+    "dev": "tsx src/app.ts"
   },
   "keywords": [],
   "author": "",
@@ -16,9 +16,10 @@
     "@types/string-similarity": "^4.0.2",
     "nodemon": "^3.1.7",
     "ts-node": "^10.9.2",
-    "ts-node-dev": "^2.0.0",
+    "tsx": "^4.19.3",
     "typescript": "^5.6.2"
   },
+  "type": "module",
   "dependencies": {
     "@types/levenshtein": "^1.0.4",
     "axios": "^1.7.7",
@@ -28,6 +29,7 @@
     "firebase-admin": "^13.0.2",
     "js-levenshtein": "^1.1.6",
     "levenshtein": "^1.0.5",
+    "lowdb": "^7.0.1",
     "mime": "^4.0.6",
     "string-similarity": "^4.0.4"
   }

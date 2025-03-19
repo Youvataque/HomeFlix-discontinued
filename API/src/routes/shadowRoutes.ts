@@ -1,11 +1,14 @@
 import { Router, Request, Response} from 'express';
 import dotenv from 'dotenv';
-import authMiddleware from './authMiddleware';
-import { fetchSourceFunc, fetchSrcUrl } from '../tools';
+import authMiddleware from './authMiddleware.js';
+import { fetchSourceFunc, fetchSrcUrl } from '../tools.js';
 import path from 'path';
 import fs from 'fs';
 import axios from 'axios';
-import { StringDecoder } from 'string_decoder';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 dotenv.config();
 const router: Router = Router();

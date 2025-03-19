@@ -1,13 +1,8 @@
 import { exec } from 'child_process';
 import { randomInt } from 'crypto';
 import dotenv from 'dotenv';
-
+import { nameVpn } from '../interfaces.js';
 dotenv.config();
-
-interface nameVpn {
-    running: String,
-    selected: String
-}
 
 /////////////////////////////////////////////////////////////////////////////////
 // Recherche du serveur VPN actif et des serveurs disponibles

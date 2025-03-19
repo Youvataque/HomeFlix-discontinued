@@ -1,11 +1,12 @@
 import axios from "axios";
 import { exec } from "child_process";
-import fs from 'fs';
 import Levenshtein from "levenshtein";
 import path from 'path';
 import util from "util";
 import dotenv from "dotenv";
-import {cleanName, extractInfo, extractTitle, isMovie, parseLsOutput} from "./tools";
+import {cleanName, extractInfo, parseLsOutput} from "./tools.js";
+import { LowSync } from "lowdb";
+import { DataStructure } from "./interfaces.js";
 
 dotenv.config();
 
@@ -73,30 +74,26 @@ export async function deleteAllTorrent(newData: any) : Promise<boolean>{
 
 /////////////////////////////////////////////////////////////////////////////////
 // supprimer les données d'une oeuvre de l'api
-export async function removeFromJson(where:string, id:string):Promise<boolean> {
-	const filePath = path.join(__dirname, '../contentData.json');
-	fs.readFile(
-		filePath, 'utf8', (err, data) => {
-			if (err) console.error(`\x1b[31mCan't read json : ${err}\x1b[0m`);
-			const jsonData = JSON.parse(data);
-			if (jsonData[where] && jsonData[where][id]) {
-				delete jsonData[where][id];
-				fs.writeFile(filePath, JSON.stringify(jsonData, null, 2), 'utf8', (err) => {
-					if (err) {
-						console.error(`\x1b[31mError during writing json : ${err}\x1b[0m`);
-						return false;
-					} else {
-						console.log(`\x1b[32m${id} has been deleted from ${where} with success.\x1b[0m`);
-						return true;
-					}
-				});
-			} else {
-				console.error(`\x1b[31m${id} not found in ${where}.\x1b[0m`);
-				return false;
-			}
+export async function removeFromJson(where: keyof DataStructure, id: string, db: LowSync<DataStructure>): Promise<boolean> {
+	try {
+		db.read();
+		if (!db.data[where] || typeof db.data[where] !== "object") {
+			console.error(`\x1b[31mErreur : ${where} n'est pas une section valide dans la base de données.\x1b[0m`);
+			return false;
 		}
-	);
-	return false;
+		if (db.data[where][id]) {
+			delete db.data[where][id];
+			db.write();
+			console.log(`\x1b[32m${id} a été supprimé de ${where} avec succès.\x1b[0m`);
+			return true;
+		} else {
+			console.error(`\x1b[31m${id} introuvable dans ${where}.\x1b[0m`);
+			return false;
+		}
+	} catch (err) {
+		console.error(`\x1b[31mErreur lors de la suppression de ${id} dans ${where} : ${err}\x1b[0m`);
+		return false;
+	}
 }
 
 /////////////////////////////////////////////////////////////////////////////////

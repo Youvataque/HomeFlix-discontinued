@@ -11,6 +11,7 @@
     "skipLibCheck": true,
     "allowJs": true
   },
+  "type": "module",
   "include": ["src/**/*.ts"],
   "files": ["src/app.ts"],
   "exclude": ["node_modules"]
