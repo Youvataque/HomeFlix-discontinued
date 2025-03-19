@@ -1,10 +1,10 @@
 import dotenv from 'dotenv';
 import { qbittorrentAPI, removeFromJson, searchTorrent } from '../actions.js';
 import { DataStructure } from '../interfaces.js';
-import { db } from '../tools.js';
+import { db, writeTheTime } from '../tools.js';
+import chalk from 'chalk';
 
 dotenv.config();
-const DIRECTORY_TO_WATCH = process.env.CONTENT_FOLDER ?? "";
 
 /////////////////////////////////////////////////////////////////////////////////
 // fonction pour récupérer toutes les infos d'un torrent
@@ -18,13 +18,13 @@ async function getTorrentProgress(torrentName: string,): Promise<number | undefi
 			params: { hash: torrentHash }
 		});
 		if (response.data) {
-			console.log(`\x1b[0mTorrent trouvé : ${response.data}\x1b[0m`);
+			writeTheTime(chalk.green(`Torrent trouvé : ${response.data}`));
 			return parseFloat((response.data.total_downloaded * 100 / response.data.total_size).toFixed(2));
 		} else {
-			console.error(`\x1b[31mTorrent "${torrentName}" non trouvé.\x1b[0m`);
+			writeTheTime(chalk.red(`Torrent "${torrentName}" non trouvé.`));
 		}
 	} catch (error) {
-		console.error(`\x1b[31mErreur lors de la récupération de l\'état du torrent : ${error}\x1b[0m`);
+		writeTheTime(chalk.red(`Erreur lors de la récupération de l'état du torrent : ${error}`));
 	}
 	return undefined; 
 }
@@ -58,19 +58,19 @@ async function checkAndProcessQueue() {
 				}
 				delete jsonData.queue[key];
 			} else {
-				console.log(`\x1b[33mEncore du boulot : ${percent}\x1b[0m`);
+				writeTheTime(chalk.yellow(`Encore du boulot : ${percent}`));
 			}
 		}
 		try {
 			db.read();
 			db.data = jsonData;
 			db.write();
-			console.log('\x1b[32mDB mise à jour avec succès\x1b[0m');
+			writeTheTime(chalk.green('DB mise à jour avec succès'));
 		} catch (err) {
-			console.error(`\x1b[31mErreur lors de la mise à jour de la DB : ${err}\x1b[0m`);
+			writeTheTime(chalk.red(`Erreur lors de la mise à jour de la DB : ${err}`));
 		}
 	} catch (err) {
-		console.error(`\x1b[31mErreur lors de la lecture de la DB: ${err}\x1b[0m`);
+		writeTheTime(chalk.red(`Erreur lors de la lecture de la DB: ${err}`));
 	}
 }
 
@@ -78,5 +78,5 @@ async function checkAndProcessQueue() {
 // lancement du listener
 export function startJsonWatcher(): void {
 	setInterval(checkAndProcessQueue, 4000);
-	console.log(`Surveillance du dossier : ${DIRECTORY_TO_WATCH}`);
+	writeTheTime(chalk.blue(`Surveillance de la base de donnée.`));
 }

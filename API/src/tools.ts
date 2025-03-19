@@ -2,6 +2,7 @@ import axios from "axios";
 import { DataStructure, FileSystemItem } from "./interfaces.js";
 import { LowSync } from 'lowdb';
 import { JSONFileSync } from 'lowdb/node';
+import chalk from "chalk";
 
 /////////////////////////////////////////////////////////////////////////////////
 // initialisation de la DB
@@ -104,17 +105,6 @@ export function extractInfo(name: string): string {
 }
 
 /////////////////////////////////////////////////////////////////////////////////
-// vérifie qu'un fichier json est valide avant d'écrire dessus
-export function isValidJson(jsonString: string): boolean {
-    try {
-        JSON.parse(jsonString);
-        return true;
-    } catch (e) {
-        return false;
-    }
-}
-
-/////////////////////////////////////////////////////////////////////////////////
 // vérifie si le titre est un film
 export function isMovie(title: string): boolean {
     const seasonPattern = /S\d{2}/i;
@@ -128,7 +118,7 @@ export function isMovie(title: string): boolean {
 /////////////////////////////////////////////////////////////////////////////////
 // Fonction utilitaire pour détecter le type MIME via l'extension
 export function getMimeType(filePath:string) {
-    const extension: string = filePath.toLowerCase().split('.')[-1];
+    const extension: string = filePath.toLowerCase().split('.').pop() || '';
     const mimeTypes:Record<string, string> = {
         mp4: 'video/mp4',
         mkv: 'video/x-matroska',
@@ -148,7 +138,7 @@ export const fetchSourceFunc = async (page: number, name: string) => {
         const response = await axios.get(`http://localhost:1337/api/fetchContent?page=${page}&name=${name}`);
         return response.data;
     } catch (error) {
-        console.error('Erreur lors de la récupération du contenu:', error);
+        writeTheTime(chalk.red(`Erreur lors de la récupération du contenu: ${error}`));
         throw error;
     }
 };
@@ -161,7 +151,27 @@ export const fetchSrcUrl = async (id: string) => {
         const response = await axios.get(`http://localhost:1337/api/downloadUrl?id=${id}`);
         return response.data;
     } catch (error) {
-        console.error('Erreur lors de la récupération du contenu:', error);
+        writeTheTime(chalk.red(`Erreur lors de la récupération du contenu: ${error}`));
         throw error;
     }
 };
+
+/////////////////////////////////////////////////////////////////////////////////
+// Renvoie la date actuel
+function test33(): string {
+    const now = new Date();
+    
+    const day = now.getDate().toString().padStart(2, '0');
+    const month = (now.getMonth() + 1).toString().padStart(2, '0');
+    const year = now.getFullYear().toString().substring(2);
+    
+    const hours = now.getHours().toString().padStart(2, '0');
+    const minutes = now.getMinutes().toString().padStart(2, '0');
+    return `[${day}/${month}/${year} - ${hours}h${minutes}]`;
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+// mes la date en début de chaine.
+export function writeTheTime(str: string) {
+    console.log(`${chalk.bgGrey(test33())} : ${str}`);
+}

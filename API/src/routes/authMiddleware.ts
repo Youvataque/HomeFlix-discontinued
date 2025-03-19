@@ -1,6 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
 import admin from '../firebaseAdmin.js';
 
+/////////////////////////////////////////////////////////////////////////////////
+// Système qui vérifie que l'utilisateurs est authentifié sur chaques routes
+// du serveur.
 const authMiddleware = async (req: Request, res: Response, next: NextFunction) => {
   const authorizationHeader = req.headers.authorization;
   const token = authorizationHeader?.split(' ')[1];

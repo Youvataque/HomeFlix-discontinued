@@ -4,9 +4,10 @@ import Levenshtein from "levenshtein";
 import path from 'path';
 import util from "util";
 import dotenv from "dotenv";
-import {cleanName, extractInfo, parseLsOutput} from "./tools.js";
+import {cleanName, extractInfo, parseLsOutput, writeTheTime} from "./tools.js";
 import { LowSync } from "lowdb";
 import { DataStructure } from "./interfaces.js";
+import chalk from "chalk";
 
 dotenv.config();
 
@@ -22,7 +23,7 @@ export const qbittorrentAPI = axios.create({
 export async function deleteOneTorrent(torrentHash: string): Promise<boolean> {
 	try {
 		if (torrentHash != "") {
-			console.log(`\x1b[33mTrying to delete torrent with hash : ${torrentHash}\x1b[0m`);
+			writeTheTime(chalk.yellow(`Trying to delete torrent with hash: ${torrentHash}`));
 			await qbittorrentAPI.post('/torrents/delete',
 				new URLSearchParams({
 				  hashes: torrentHash,
@@ -34,14 +35,14 @@ export async function deleteOneTorrent(torrentHash: string): Promise<boolean> {
 				  }
 				}
 			  );
-			console.log(`\x1b[32m${torrentHash} has been deleted with success.\x1b[0m`);
+			writeTheTime(chalk.green(`${torrentHash} has been deleted with success.`));
 			return true;
 		}  else {
-			console.error('\x1b[31mNo torrent has been found !\x1b[0m');
+			writeTheTime(chalk.red('No torrent has been found!'));
 			return false;
 		}
 	} catch (error) {
-		console.error(`\x1b[31mError during deleting : ${error}\x1b[0m`);
+		writeTheTime(chalk.red(`Error during deleting: ${error}`));
 		return false;
 	}
 }
@@ -67,7 +68,7 @@ export async function deleteAllTorrent(newData: any) : Promise<boolean>{
 		}
 		return true;
 	} catch (error) {
-		console.error(`\x1b[31mAn error has occured : ${error}\x1b[0m`);
+		writeTheTime(chalk.red(`An error has occurred: ${error}`));
 		return false;
 	}
 }
@@ -78,20 +79,20 @@ export async function removeFromJson(where: keyof DataStructure, id: string, db:
 	try {
 		db.read();
 		if (!db.data[where] || typeof db.data[where] !== "object") {
-			console.error(`\x1b[31mErreur : ${where} n'est pas une section valide dans la base de données.\x1b[0m`);
+			writeTheTime(chalk.red(`Erreur: ${where} n'est pas une section valide dans la base de données.`));
 			return false;
 		}
 		if (db.data[where][id]) {
 			delete db.data[where][id];
 			db.write();
-			console.log(`\x1b[32m${id} a été supprimé de ${where} avec succès.\x1b[0m`);
+			writeTheTime(chalk.green(`${id} a été supprimé de ${where} avec succès.`));
 			return true;
 		} else {
-			console.error(`\x1b[31m${id} introuvable dans ${where}.\x1b[0m`);
+			writeTheTime(chalk.red(`${id} introuvable dans ${where}.`));
 			return false;
 		}
 	} catch (err) {
-		console.error(`\x1b[31mErreur lors de la suppression de ${id} dans ${where} : ${err}\x1b[0m`);
+		writeTheTime(chalk.red(`Erreur lors de la suppression de ${id} dans ${where}: ${err}`));
 		return false;
 	}
 }
@@ -209,9 +210,9 @@ export async function searchTorrent(name: string): Promise<string> {
 				probability.content = torrent.hash;
 			}
 		});
-		console.log(`\x1b[32mThe most comparable torrent is : "${probability.content}" with ${probability.percent}% of similarity.\x1b[0m`);
+		writeTheTime(chalk.green(`The most comparable torrent is: "${probability.content}" with ${probability.percent}% of similarity.`));
 	} catch (error) {
-		console.error(`\x1b[31mError during torrent search : ${error}\x1b[0m`);
+		writeTheTime(chalk.red(`Error during torrent search: ${error}`));
 	}
 	return probability.content;
 }
@@ -234,7 +235,6 @@ export async function searchContent(name: string, fileName: string, movie: boole
 					calculateMovieSimilarity(extractInfo(cleanName(count < 2 ? fileName : name, movie)), extractInfo(cleanName(item.name, movie)))
 				:
 					calculateSeriesSimilarity(cleanName(name, movie), extractInfo(cleanName(item.name, movie)));
-			console.log(`onServeur : ${extractInfo(cleanName(item.name, movie))} tested : ${cleanName(name, movie)} sim : ${similarity}\n`);
 			if (similarity > probability.percent && !excludedExtensions.includes(item.name.split(".").pop()?.toLowerCase() ?? "")) {
 				probability = { percent: similarity, content: item.name, type: item.type };
 				count++;

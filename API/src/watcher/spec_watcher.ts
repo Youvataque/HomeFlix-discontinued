@@ -1,7 +1,8 @@
 import { exec } from 'child_process';
 import axios from 'axios';
 import { infoSpec, SpecItem } from '../interfaces.js';
-import { specDb } from '../tools.js';
+import { specDb, writeTheTime } from '../tools.js';
+import chalk from 'chalk';
 
 /////////////////////////////////////////////////////////////////////////////////
 // récupère les informations système de l'ordinateur pour les afficher dans l'app
@@ -9,12 +10,12 @@ function getSystemInfo(): Promise<infoSpec> {
 	return new Promise((resolve, reject) => {
 		exec('sensors', (error, stdout, stderr) => {
 			if (error) {
-				console.error(`\x1b[31mErreur: ${error.message}\x1b[0m`);
+				writeTheTime(chalk.red(`Erreur: ${error.message}`));
 				reject(error);
 				return;
 			}
 			if (stderr) {
-				console.error(`\x1b[31mErreur: ${stderr}\x1b[0m`);
+				writeTheTime(chalk.red(`Erreur: ${stderr}`));
 				reject(stderr);
 				return;
 			}
@@ -28,12 +29,12 @@ function getSystemInfo(): Promise<infoSpec> {
 
 				exec('df -h /dev/sdb1', (error, stdout, stderr) => {
 					if (error) {
-						console.error(`Erreur df: ${error.message}\x1b[0m`);
+						writeTheTime(chalk.red(`Erreur df: ${error.message}`));
 						resolve({ cpu, fan: fanSpeed, ram: ramUsage, storage: 'Erreur on stockage' });
 						return;
 					}
 					if (stderr) {
-						console.error(`Erreur df: ${stderr}\x1b[0m`);
+						writeTheTime(chalk.red(`Erreur df: ${stderr}`));
 						resolve({ cpu, fan: fanSpeed, ram: ramUsage, storage: 'Erreur on stockage' });
 						return;
 					}
@@ -54,9 +55,9 @@ function getSystemInfo(): Promise<infoSpec> {
 // vérifie la présence d'une interface réseau vpn (tun0)
 function checkVpnStatus(): Promise<boolean> {
 	return new Promise((resolve) => {
-		exec('ip link show', (error:any, stdout:string) => {
+		exec('ip link show', (error: any, stdout: string) => {
 			if (error) {
-				console.error(`\x1b[31mErreur: ${error.message}`);
+				writeTheTime(chalk.red(`Erreur: ${error.message}`));
 				resolve(false);
 				return;
 			}
@@ -72,8 +73,8 @@ async function getQbittorrentStats(): Promise<string> {
 		const response = await axios.get('http://localhost:8080/api/v2/transfer/info');
 		const data = response.data;
 		return `${(data.dl_info_speed / (1024 * 1024)).toFixed(2)}`
-	} catch (error:any) {
-		console.error(`\x1b[31mErreur qBittorrent: ${error.message}\x1b[0m`);
+	} catch (error: any) {
+		writeTheTime(chalk.red(`Erreur qBittorrent: ${error.message}`));
 		return "no value";
 	}
 }
@@ -82,9 +83,9 @@ async function getQbittorrentStats(): Promise<string> {
 // récupère le nombre de personne qui visionnent un film
 async function getNbUser(): Promise<string> {
 	return new Promise((resolve) => {
-		exec('netstat -tu | grep ESTABLISHED | grep NightCenter:ftp | grep -v 10.170.88.92.rev | cut -d: -f2 | sort | uniq | wc -l', (error:any, stdout:string) => {
+		exec('netstat -tu | grep ESTABLISHED | grep NightCenter:ftp | grep -v 10.170.88.92.rev | cut -d: -f2 | sort | uniq | wc -l', (error: any, stdout: string) => {
 			if (error) {
-				console.error(`\x1b[31mErreur: ${error.message}\x1b[0m`);
+				writeTheTime(chalk.red(`Erreur: ${error.message}`));
 				resolve("no value");
 				return;
 			}
@@ -110,9 +111,9 @@ async function runAllChecks() {
 		specDb.read();
 		specDb.data = { spec: jsonData };
 		specDb.write();
-		console.log("\x1b[32mDonnées de performances mises à jour avec succès :\x1b[0m");
+		writeTheTime(chalk.cyan("Données de performances mises à jour avec succès."));
 	} catch (err) {
-		console.error(`\x1b[31mErreur lors de l'écriture du fichier JSON : ${err}\x1b[0m`);
+		writeTheTime(chalk.red(`Erreur lors de l'écriture du fichier JSON : ${err}`));
 	}
 }
 
@@ -120,6 +121,5 @@ async function runAllChecks() {
 // lance le listener
 export function startSpecWatcher(): void {
 	setInterval(runAllChecks, 4000);
-	console.log(`Surveillance des performances en cours !`);
+	writeTheTime(chalk.blue(`Surveillance des performances en cours !`));
 }
-  

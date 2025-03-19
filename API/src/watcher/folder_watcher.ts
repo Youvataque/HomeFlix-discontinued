@@ -3,6 +3,8 @@ import path from 'path';
 import dotenv from 'dotenv';
 import FormData from 'form-data';
 import { qbittorrentAPI } from '../actions.js';
+import chalk from 'chalk';
+import { writeTheTime } from '../tools.js';
 
 dotenv.config();
 const DIRECTORY_TO_WATCH = process.env.TORRENT_FOLDER ?? "";
@@ -17,7 +19,7 @@ function openFileWhenComplete(filepath: string): void {
 
 		if (currentSize === lastSize) {
 			clearInterval(checkFileComplete);
-			console.log(`\x1b[32mFichier complet : ${filepath}\x1b[0m`);
+			writeTheTime(chalk.green(`Fichier complet : ${filepath}`));
 
 			const formData = new FormData();
 			formData.append('torrents', fs.createReadStream(filepath));
@@ -27,10 +29,10 @@ function openFileWhenComplete(filepath: string): void {
 					headers: formData.getHeaders(),
 				})
 				.then(() => {
-					console.log(`\x1b[32mTorrent ajouté avec succès : ${path.basename(filepath)}\x1b[0m`);
+					writeTheTime(chalk.green(`Torrent ajouté avec succès : ${path.basename(filepath)}`));
 				})
 				.catch((error) => {
-					console.error(`\x1b[31mErreur lors de l'ajout du torrent : ${error.response?.data || error.message}\x1b[0m`);
+					writeTheTime(chalk.red(`Erreur lors de l'ajout du torrent : ${error.response?.data || error.message}`));
 				});
 		} else {
 			lastSize = currentSize;
@@ -46,11 +48,10 @@ export function startFolderWatcher(): void {
 			const filepath = path.join(DIRECTORY_TO_WATCH, filename);
 
 			if (fs.existsSync(filepath) && !fs.lstatSync(filepath).isDirectory()) {
-				console.log(`Fichier détecté : ${filepath}`);
+				writeTheTime(`Fichier détecté : ${filepath}`);
 				openFileWhenComplete(filepath);
 			}
 		}
 	});
-
-    console.log(`Surveillance du dossier : ${DIRECTORY_TO_WATCH}`);
+    writeTheTime(chalk.blue(`Surveillance du dossier -> ${DIRECTORY_TO_WATCH}`));
 }

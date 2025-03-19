@@ -2,9 +2,10 @@ import { Router, Request, Response, NextFunction } from 'express';
 import fs from 'fs';
 import dotenv from 'dotenv';
 import { deleteAllTorrent, deleteOneTorrent, removeFromJson, searchContent, searchTorrent } from '../actions.js';
-import { db, getMimeType, isValidJson, specDb } from "../tools.js";
+import { db, getMimeType, specDb, writeTheTime } from "../tools.js";
 import authMiddleware from './authMiddleware.js';
 import { DataStructure } from '../interfaces.js';
+import chalk from 'chalk';
 
 dotenv.config();
 const router: Router = Router();
@@ -12,15 +13,26 @@ const router: Router = Router();
 /////////////////////////////////////////////////////////////////////////////////
 // Route pour récupérer des données de contenu
 router.get('/contentStatus', authMiddleware,(req: Request, res: Response) => {
-	db.read();
-	res.json(db.data);
+	try {
+		db.read();
+		res.json(db.data);
+		writeTheTime(chalk.green(`Contenu de la db lue avec succès.`));
+	} catch (err) {
+		writeTheTime(chalk.red(`Erreur lors de la lecture de la DB : ${err}`));
+		res.status(500).json({ error: 'Erreur interne du serveur' });
+	}
 });
 
 /////////////////////////////////////////////////////////////////////////////////
 // Route pour récupérer des données de spec
 router.get('/specStatus', authMiddleware,(req: Request, res: Response) => {
-	specDb.read();
-	res.json(specDb.data);
+	try {
+		specDb.read();
+		res.json(specDb.data);
+	} catch (err) {
+		writeTheTime(chalk.red(`Erreur lors de la lecture de la DB : ${err}`));
+		res.status(500).json({ error: 'Erreur interne du serveur' });
+	}
 });
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -47,9 +59,9 @@ router.post('/contentStatus', authMiddleware, (req: Request, res: Response) => {
 		};
 		db.write();
 		res.status(201).json({ message: 'Données ajoutées avec succès' });
-
+		writeTheTime(chalk.green(`Données ajoutées avec succès à la DB.`));
 	} catch (err) {
-		console.error(`\x1b[31mErreur dans /contentStatus: ${err}\x1b[0m`);
+		writeTheTime(chalk.red(`Erreur dans /contentStatus: ${err}`));
 		res.status(500).json({ error: 'Erreur interne du serveur' });
 	}
 });
@@ -57,7 +69,7 @@ router.post('/contentStatus', authMiddleware, (req: Request, res: Response) => {
 /////////////////////////////////////////////////////////////////////////////////
 // Route pour supprimer une oeuvre
 router.post('/contentErase', authMiddleware, async (req: Request, res: Response) => {
-	const {newData} = req.body;
+	const { newData } = req.body;
 	let del = false;
 	db.read();
 	if (newData['media']) {
@@ -75,14 +87,14 @@ router.post('/contentSearch', authMiddleware, async (req: Request, res: Response
 	const { name, fileName, type } = req.body;
 
 	if (!name || typeof name !== 'string') {
-		return res.status(400).json({error: 'Le nom et le type de contenu sont requis.'});
+		return res.status(400).json({ error: 'Le nom et le type de contenu sont requis.' });
 	}
 	try {
 		const contentPath = await searchContent(name, fileName, type);
 		res.status(200).json({ path: contentPath });
 	} catch (error) {
-		console.error('\x1b[31mErreur lors de la recherche du contenu :\x1b[0m', error);
-		res.status(500).json({error: 'Une erreur est survenue lors de la recherche du contenu.'});
+		writeTheTime(chalk.red(`Erreur lors de la recherche du contenu : ${error}`));
+		res.status(500).json({ error: 'Une erreur est survenue lors de la recherche du contenu.' });
 	}
 });
 
@@ -97,7 +109,7 @@ router.get('/streamVideo', authMiddleware, (req, res) => {
 
 	fs.stat(videoPath, (err, stats) => {
 		if (err) {
-			console.error(`Erreur lors de l'accès au fichier : ${err.message}`);
+			writeTheTime(`Erreur lors de l'accès au fichier : ${err.message}`);
 			return res.status(404).json({ message: 'Fichier non trouvé.' });
 		}
 		const fileSize = stats.size;

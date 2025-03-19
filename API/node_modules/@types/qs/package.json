@@ -1,6 +1,6 @@
 {
     "name": "@types/qs",
-    "version": "6.9.17",
+    "version": "6.9.18",
     "description": "TypeScript definitions for qs",
     "homepage": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/qs",
     "license": "MIT",
@@ -61,6 +61,6 @@
     "scripts": {},
     "dependencies": {},
     "peerDependencies": {},
-    "typesPublisherContentHash": "00acee13c313ecab590a15553dd9a5639247613217ce1666a302dc6328e18050",
-    "typeScriptVersion": "4.8"
+    "typesPublisherContentHash": "2b3ee00ab119740c8d250fb641a3ab35b4a40a86c735d92f5d6ca12894a1ec0f",
+    "typeScriptVersion": "5.0"
 }

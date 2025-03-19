@@ -2,6 +2,8 @@ import { exec } from 'child_process';
 import { randomInt } from 'crypto';
 import dotenv from 'dotenv';
 import { nameVpn } from '../interfaces.js';
+import chalk from 'chalk';
+import { writeTheTime } from '../tools.js';
 dotenv.config();
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -16,8 +18,8 @@ function searchServer(): Promise<nameVpn> {
     return new Promise((resolve) => {
         exec("nmcli connection", (error, stdout, stderr) => {
             if (error) {
-                console.error(`\x1b[31mErreur avec le gestionnaire réseau : ${error.message}\x1b[0m`);
-                console.error(`\x1b[31mDétail : ${stderr}\x1b[0m`);
+                writeTheTime(chalk.red(`Erreur avec le gestionnaire réseau : ${error.message}`));
+                writeTheTime(chalk.red(`Détail : ${stderr}`));
                 resolve(result);
                 return;
             }
@@ -32,7 +34,7 @@ function searchServer(): Promise<nameVpn> {
             }
             result.selected = possibilities[randomInt(possibilities.length)];
             if (!result.selected) {
-                console.error("\x1b[31mAucun serveur VPN n'est disponible.\x1b[0m");
+                writeTheTime(chalk.red("Aucun serveur VPN n'est disponible."));
                 resolve(result);
                 return;
             }
@@ -47,14 +49,14 @@ function checkIfRunning(): Promise<boolean> {
     return new Promise((resolve) => {
         exec("ping -I tun0 -c 2 google.com", (error, stdout, stderr) => {
             if (error) {
-                console.error(`\x1b[31mErreur avec le VPN : ${error.message}\x1b[0m`);
-                console.error(`\x1b[31mDétail : ${stderr}\x1b[0m`);
+                writeTheTime(chalk.red(`Erreur avec le VPN : ${error.message}`));
+                writeTheTime(chalk.red(`Détail : ${stderr}`));
                 resolve(false);
                 return;
             }
             const isConnected = stdout.includes('bytes from') || stdout.includes('octets de');
             if (!isConnected) {
-                console.warn("\x1b[33mLe VPN semble inactif.\x1b[0m");
+                writeTheTime(chalk.yellow("Le VPN semble inactif."));
             }
             resolve(isConnected);
         });
@@ -69,29 +71,29 @@ async function controlUpdateVpn() {
         const names: nameVpn = await searchServer();
 
         if (names.running) {
-            console.log(`\x1b[33mDéconnexion du VPN actuel : ${names.running}\x1b[0m`);
+            writeTheTime(chalk.yellow(`Déconnexion du VPN actuel : ${names.running}`));
             exec(`nmcli connection down ${names.running}`, (error, stdout, stderr) => {
                 if (error) {
-                    console.error(`\x1b[31mErreur de déconnexion : ${error.message}\x1b[0m`);
-                    console.error(`\x1b[31mDétail : ${stderr}\x1b[0m`);
+                    writeTheTime(chalk.red(`Erreur de déconnexion : ${error.message}`));
+                    writeTheTime(chalk.red(`Détail : ${stderr}`));
                 } else {
-                    console.log(`\x1b[32mDéconnecté de ${names.running}\x1b[0m`);
+                    writeTheTime(chalk.green(`Déconnecté de ${names.running}`));
                 }
             });
         }
 
-        console.log(`\x1b[33mConnexion au serveur VPN : ${names.selected}\x1b[0m`);
-            console.log("Mot de passe VPN :", process.env.VPN_PASS);
+        writeTheTime(chalk.yellow(`Connexion au serveur VPN : ${names.selected}`));
+        writeTheTime(`Mot de passe VPN : ${process.env.VPN_PASS}`);
         exec(`echo ${process.env.VPN_PASS} | nmcli connection up ${names.selected} --ask`, (error, stdout, stderr) => {
             if (error) {
-                console.error(`\x1b[31mErreur de connexion : ${error.message}\x1b[0m`);
-                console.error(`\x1b[31mDétail : ${stderr}\x1b[0m`);
+                writeTheTime(chalk.red(`Erreur de connexion : ${error.message}`));
+                writeTheTime(chalk.red(`Détail : ${stderr}`));
                 return;
             }
             if (stdout.includes('connexion activée') || stdout.includes('Connection successfully activated')) {
-                console.log(`\x1b[32mConnexion réussie à ${names.selected}.\x1b[0m`);
+                writeTheTime(chalk.green(`Connexion réussie à ${names.selected}.`));
             } else {
-                console.warn(`\x1b[33mLa connexion à ${names.selected} n'a pas été confirmée.\x1b[0m`);
+                writeTheTime(chalk.yellow(`La connexion à ${names.selected} n'a pas été confirmée.`));
             }
         });
     }
@@ -101,5 +103,5 @@ async function controlUpdateVpn() {
 // Démarrage du watcher
 export function startVpnWatcher(): void {
     setInterval(controlUpdateVpn, 20000);
-    console.log(`\x1b[34mSurveillance de l'état du VPN en cours...\x1b[0m`);
+    writeTheTime(chalk.blue(`Surveillance de l'état du VPN en cours.`));
 }
