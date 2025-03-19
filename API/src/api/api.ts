@@ -1,7 +1,6 @@
 import express, { Application } from 'express';
 import dataRoute from '../routes/dataRoutes.js';
 import shadowRoute from '../routes/shadowRoutes.js';
-import chalk from 'chalk';
 const app: Application = express();
 const port: number = 4000;
 app.use(express.json());
