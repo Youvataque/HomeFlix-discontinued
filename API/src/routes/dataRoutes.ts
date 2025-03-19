@@ -2,7 +2,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import fs from 'fs';
 import dotenv from 'dotenv';
 import { deleteAllTorrent, deleteOneTorrent, removeFromJson, searchContent, searchTorrent } from '../actions.js';
-import { db, getMimeType, specDb, writeTheTime } from "../tools.js";
+import { db, getActualTime, getMimeType, specDb, writeTheTime } from "../tools.js";
 import authMiddleware from './authMiddleware.js';
 import { DataStructure } from '../interfaces.js';
 import chalk from 'chalk';
@@ -55,6 +55,7 @@ router.post('/contentStatus', authMiddleware, (req: Request, res: Response) => {
 			"name": newData["name"],
 			"media": newData["media"],
 			"percent": newData["percent"],
+			"date": getActualTime(),
 			"seasons": newData["seasons"]
 		};
 		db.write();

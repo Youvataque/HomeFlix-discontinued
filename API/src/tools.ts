@@ -158,7 +158,7 @@ export const fetchSrcUrl = async (id: string) => {
 
 /////////////////////////////////////////////////////////////////////////////////
 // Renvoie la date actuel
-function test33(): string {
+export function getActualTime(): string {
     const now = new Date();
     
     const day = now.getDate().toString().padStart(2, '0');
@@ -173,5 +173,5 @@ function test33(): string {
 /////////////////////////////////////////////////////////////////////////////////
 // mes la date en début de chaine.
 export function writeTheTime(str: string) {
-    console.log(`${chalk.bgGrey(test33())} : ${str}`);
+    console.log(`${chalk.bgGrey(getActualTime())} : ${str}`);
 }

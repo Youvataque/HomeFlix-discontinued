@@ -6,6 +6,7 @@ export interface MediaItem {
 	name: string;
 	media: boolean;
 	percent:number;
+	date: string;
 	seasons: Record<string, unknown>
 }
 
