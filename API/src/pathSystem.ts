@@ -1,9 +1,12 @@
 import chalk from "chalk";
-import { calculateWordSimilarity, searchContent } from "./actions.js";
-import { writeTheTime } from "./tools.js";
+import { calculateContentSimilarity, calculateWordSimilarity } from "./actions.js";
+import { cleanName, extractInfo, parseLsOutput, writeTheTime } from "./tools.js";
 import { getContentDetails, moviePossHash, SeriePossHash } from "./torrentTools.js";
 import { stat } from 'fs/promises';
 import { SearchResult } from "./interfaces.js";
+import path from "path";
+import { exec } from "child_process";
+import util from "util";
 
 /////////////////////////////////////////////////////////////////////////////////
 // Fonction pour retourner le hash le plus proche de celui cherché pour tout 
@@ -39,14 +42,46 @@ export async function isDirectory(path: string): Promise<boolean> {
 	}
 }
 
+/////////////////////////////////////////////////////////////////////////////////
+// Fonction servant à envoyer le bon nom à completePath
 function goodName(name: string, originalName: string, possSel: string): string {
 	const sim1 = calculateWordSimilarity(name, possSel);
 	const sim2 = calculateWordSimilarity(originalName, possSel);
-	if (sim1 > sim2)
+	if (sim1 > sim2) {
 		return name;
-	else
+	} else {
 		return originalName;
+	}
+}
 
+const execAsync = util.promisify(exec);
+/////////////////////////////////////////////////////////////////////////////////
+// Fonction servant à compléter la recherche de path si nécéssaire
+export async function completePath(name: string, movie: boolean, tempPath:string): Promise<string> {
+	const excludedExtensions = ["nfo", "txt", "jpg", "sfv"];
+	let probability = { percent: 0, content: "", type: "" };
+	let contentPath = tempPath;
+	let count: number = 0;
+
+	while (true) {
+		const { stdout: lsOutput } = await execAsync(`ls -l "${contentPath}"`);
+		const items = parseLsOutput(lsOutput);
+		items.forEach(item => {
+			const similarity = calculateContentSimilarity(cleanName(name, movie), cleanName(item.name, movie))
+			console.log(chalk.yellow(`Test item : ${extractInfo(cleanName(item.name, movie))} percent : ${similarity}`));
+			if (similarity > probability.percent && !excludedExtensions.includes(item.name.split(".").pop()?.toLowerCase() ?? "")) {
+				probability = { percent: similarity, content: item.name, type: item.type };
+				count++;
+			}
+		});
+		if (probability.type === "directory") {
+			contentPath = path.join(contentPath, probability.content);
+			probability = { percent: 0, content: "", type: "" };
+		} else if (probability.type === "file" || !items.some(item => item.type === "directory")) {
+			break;
+		}
+	}
+	return `${contentPath}/${probability.content}`;
 }
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -58,8 +93,7 @@ export async function createAbsPath(name: string, originalName: string, movie: b
 	if (await isFile(tempPath)) {
 		return tempPath;
 	} else if (await isDirectory(tempPath)) {
-		
-		return await searchContent(goodName(name, originalName, datas.name), movie, tempPath);
+		return await completePath(goodName(name, originalName, datas.name), movie, tempPath);
 	} else {
 		writeTheTime(chalk.red(`Erreur ! Aucun chemin d'accès trouvé pour ${name}`));
 		return "";

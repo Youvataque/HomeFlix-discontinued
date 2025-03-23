@@ -1,9 +1,6 @@
-import { exec } from "child_process";
 import Levenshtein from "levenshtein";
-import path from 'path';
-import util from "util";
 import dotenv from "dotenv";
-import {cleanName, extractInfo, parseLsOutput, writeTheTime} from "./tools.js";
+import {cleanName, extractInfo, writeTheTime} from "./tools.js";
 import { LowSync } from "lowdb";
 import { DataStructure } from "./interfaces.js";
 import chalk from "chalk";
@@ -69,35 +66,4 @@ export function calculateContentSimilarity(name: string, comparedName: string): 
 	const titleSimilarity = calculateWordSimilarity(cleanName(name, true), cleanName(comparedName, true));
 	const finalScore = (matchScore / totalScore) * 100;
 	return 0.7 * finalScore + 0.3 * titleSimilarity;
-}
-
-const execAsync = util.promisify(exec);
-
-/////////////////////////////////////////////////////////////////////////////////
-// recherche un contenu à partir de son nom dans le serveur (complément)
-export async function searchContent(name: string, movie: boolean, tempPath:string): Promise<string> {
-	const excludedExtensions = ["nfo", "txt", "jpg", "sfv"];
-	let probability = { percent: 0, content: "", type: "" };
-	let contentPath = tempPath;
-	let count: number = 0;
-
-	while (true) {
-		const { stdout: lsOutput } = await execAsync(`ls -l "${contentPath}"`);
-		const items = parseLsOutput(lsOutput);
-		items.forEach(item => {
-			const similarity = calculateContentSimilarity(cleanName(name, movie), cleanName(item.name, movie))
-			console.log(chalk.yellow(`Test item : ${extractInfo(cleanName(item.name, movie))} percent : ${similarity}`));
-			if (similarity > probability.percent && !excludedExtensions.includes(item.name.split(".").pop()?.toLowerCase() ?? "")) {
-				probability = { percent: similarity, content: item.name, type: item.type };
-				count++;
-			}
-		});
-		if (probability.type === "directory") {
-			contentPath = path.join(contentPath, probability.content);
-			probability = { percent: 0, content: "", type: "" };
-		} else if (probability.type === "file" || !items.some(item => item.type === "directory")) {
-			break;
-		}
-	}
-	return `${contentPath}/${probability.content}`;
 }
