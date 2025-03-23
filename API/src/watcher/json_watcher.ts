@@ -1,16 +1,18 @@
 import dotenv from 'dotenv';
-import { qbittorrentAPI, removeFromJson, searchTorrent } from '../actions.js';
 import { DataStructure } from '../interfaces.js';
 import { db, writeTheTime } from '../tools.js';
 import chalk from 'chalk';
+import { contentBestHash } from '../pathSystem.js';
+import { qbittorrentAPI } from '../torrentTools.js';
+import { removeFromJson } from '../actions.js';
 
 dotenv.config();
 
 /////////////////////////////////////////////////////////////////////////////////
 // fonction pour récupérer toutes les infos d'un torrent
-async function getTorrentProgress(torrentName: string,): Promise<number | undefined> {
+async function getTorrentProgress(name: string, originalName: string, movie: boolean): Promise<number | undefined> {
 	try {
-		const torrentHash = await searchTorrent(torrentName);
+		const torrentHash = (await contentBestHash(name, originalName, movie)).hash;
 		if (torrentHash == "")
 			return undefined;
 		await qbittorrentAPI.post('/auth/login');
@@ -21,7 +23,7 @@ async function getTorrentProgress(torrentName: string,): Promise<number | undefi
 			writeTheTime(chalk.green(`Torrent trouvé : ${response.data}`));
 			return parseFloat((response.data.total_downloaded * 100 / response.data.total_size).toFixed(2));
 		} else {
-			writeTheTime(chalk.red(`Torrent "${torrentName}" non trouvé.`));
+			writeTheTime(chalk.red(`Torrent "${name}" non trouvé.`));
 		}
 	} catch (error) {
 		writeTheTime(chalk.red(`Erreur lors de la récupération de l'état du torrent : ${error}`));
@@ -40,7 +42,7 @@ async function checkAndProcessQueue() {
 
 		for (const key in jsonData.queue) {
 			const item = jsonData.queue[key];
-			const percent = await getTorrentProgress(item.name);
+			const percent = await getTorrentProgress(item.title, item.originalTitle, item.media);
 			if (percent !== undefined) {
 				item.percent = percent;
 				jsonData.queue[key].percent = percent;

@@ -2,9 +2,9 @@ import fs from 'fs';
 import path from 'path';
 import dotenv from 'dotenv';
 import FormData from 'form-data';
-import { qbittorrentAPI } from '../actions.js';
 import chalk from 'chalk';
 import { writeTheTime } from '../tools.js';
+import { qbittorrentAPI } from '../torrentTools.js';
 
 dotenv.config();
 const DIRECTORY_TO_WATCH = process.env.TORRENT_FOLDER ?? "";
@@ -23,7 +23,6 @@ function openFileWhenComplete(filepath: string): void {
 
 			const formData = new FormData();
 			formData.append('torrents', fs.createReadStream(filepath));
-
 			qbittorrentAPI
 				.post('/torrents/add', formData, {
 					headers: formData.getHeaders(),

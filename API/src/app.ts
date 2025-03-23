@@ -10,4 +10,3 @@ startAPI();
 startFolderWatcher();
 startJsonWatcher();
 startSpecWatcher();
-startVpnWatcher();

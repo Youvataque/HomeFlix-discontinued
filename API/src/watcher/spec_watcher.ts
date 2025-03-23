@@ -1,12 +1,12 @@
 import { exec } from 'child_process';
 import axios from 'axios';
-import { infoSpec, SpecItem } from '../interfaces.js';
+import { InfoSpec, SpecItem } from '../interfaces.js';
 import { specDb, writeTheTime } from '../tools.js';
 import chalk from 'chalk';
 
 /////////////////////////////////////////////////////////////////////////////////
 // récupère les informations système de l'ordinateur pour les afficher dans l'app
-function getSystemInfo(): Promise<infoSpec> {
+function getSystemInfo(): Promise<InfoSpec> {
 	return new Promise((resolve, reject) => {
 		exec('sensors', (error, stdout, stderr) => {
 			if (error) {

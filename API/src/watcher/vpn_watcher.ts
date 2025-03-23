@@ -1,15 +1,15 @@
 import { exec } from 'child_process';
 import { randomInt } from 'crypto';
 import dotenv from 'dotenv';
-import { nameVpn } from '../interfaces.js';
+import { NameVpn } from '../interfaces.js';
 import chalk from 'chalk';
 import { writeTheTime } from '../tools.js';
 dotenv.config();
 
 /////////////////////////////////////////////////////////////////////////////////
 // Recherche du serveur VPN actif et des serveurs disponibles
-function searchServer(): Promise<nameVpn> {
-    let result: nameVpn = {
+function searchServer(): Promise<NameVpn> {
+    let result: NameVpn = {
         running: "",
         selected: "",
     };
@@ -68,7 +68,7 @@ function checkIfRunning(): Promise<boolean> {
 async function controlUpdateVpn() {
     const isRunning: boolean = await checkIfRunning();
     if (!isRunning) {
-        const names: nameVpn = await searchServer();
+        const names: NameVpn = await searchServer();
 
         if (names.running) {
             writeTheTime(chalk.yellow(`Déconnexion du VPN actuel : ${names.running}`));

@@ -15,10 +15,10 @@ export const specDb = new LowSync(adapter2, { spec: {} });
 // mots à retirer des noms de fichiers
 const trashWord: (string | RegExp)[] = [
     'multi', 'vff', 'vfi', 'vfq', 'vf2', 'vo', 'vostfr', 'truefrench', 'french', 'en', 'fr', 'vof',
-    'bluray', 'web', 'webrip', 'web-dl', 'bdrip', 'hdrip', 'dvdrip', 'nf', 'amazon', 'amzn', 'hdtv', 'rip', 'hddvd',
+    'bluray', 'web', 'webrip', 'web-dl', 'bdrip', 'hdrip', 'dvdrip', 'nf', 'amazon', 'amzn', 'hdtv', 'rip', 'hddvd', 'dl',
     '1080p', '720p', '2160p', '4k', '4KLight', '2k', '10bit', 'hdr', 'hdr10', 'hdr10plus', 'dolby vision', 'dv', 'hdlight', 'fullhd', 'imax', '5.1', '7.1', 
     'x264', 'x265', 'h264', 'h265', 'hevc', 'aac', 'dts', 'ddp', 'ac3', 'eac3', 'mp4', 'mkv', 'av1','atmos', '6ch', 'k7', 
-    'fw', 'pophd', 'neostark', 'serqph', 'bonbon', 'qtz', 'slay3r', 'idys', 'r3mix', 'asko', 'btt', 'tox', 'gwen', 'hdgz', 'mhgz', 'preums', 'papaya', 'qtz', 
+    'fw', 'pophd', 'neostark', 'serqph', 'bonbon', 'qtz', 'slay3r', 'idys', 'r3mix', 'asko', 'btt', 'tox', 'gwen', 'hdgz', 'mhgz', 'preums', 'papaya', 'qtz', 'fervex', 'btfx', 
     /\b(19|20)\d{2}\b/g,
     'extended', 'remastered', 'final', 'complete', 'repack', 'custom', 'unrated', 'super duper cut', 'integrale', 'collection', 'edition', 'part', 'vol', 'volume', 'chapter',
     'saison', 'season', 'episode', 'ep', 's', 'e'
@@ -45,11 +45,11 @@ export function cleanName(name: string, movie: boolean): string {
         .replace(/r(\d{1,2})/gi, (match, p1) => `s${p1.padStart(2, '0')}`)
         .replace(/\b(saison|season)\s?(\d{1,2})\b/gi, (match, p1, p2) => `s${p2.padStart(2, '0')}`)
         .replace(/[\s._\-:(),]+/g, ' ')
+        .replace(/[\[\]]+/g, ' ')
         .trim();
     return removeAccents(
         movie ? result : result.replace(/\b(zero|one|two|three|four|five|six|seven|eight|nine|ten|un|deux|trois|quatre|cinq|six|sept|huit|neuf|dix)\b/gi, (match) => numberWords[match.toLowerCase()] || match)
     );
-
 }
 
 /////////////////////////////////////////////////////////////////////////////////

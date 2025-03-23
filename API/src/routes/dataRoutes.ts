@@ -1,11 +1,13 @@
-import { Router, Request, Response, NextFunction } from 'express';
+import { Router, Request, Response } from 'express';
 import fs from 'fs';
 import dotenv from 'dotenv';
-import { deleteAllTorrent, deleteOneTorrent, removeFromJson, searchContent, searchTorrent } from '../actions.js';
 import { db, getActualTime, getMimeType, specDb, writeTheTime } from "../tools.js";
 import authMiddleware from './authMiddleware.js';
 import { DataStructure } from '../interfaces.js';
 import chalk from 'chalk';
+import { createAbsPath } from '../pathSystem.js';
+import { deleteAllTorrent, deleteOneTorrent, searchTorrent } from '../torrentTools.js';
+import { removeFromJson } from '../actions.js';
 
 dotenv.config();
 const router: Router = Router();
@@ -74,8 +76,8 @@ router.post('/contentErase', authMiddleware, async (req: Request, res: Response)
 	let del = false;
 	db.read();
 	if (newData['media']) {
-		const torrentHash = await searchTorrent(newData["name"]);
-		del = await deleteOneTorrent(torrentHash);
+		const datas = await searchTorrent(newData["name"]);
+		del = await deleteOneTorrent(datas.hash);
 	} else {
 		del = await deleteAllTorrent(newData);
 	}
@@ -91,8 +93,8 @@ router.post('/contentSearch', authMiddleware, async (req: Request, res: Response
 		return res.status(400).json({ error: 'Le nom et le type de contenu sont requis.' });
 	}
 	try {
-		const contentPath = await searchContent(name, fileName, type);
-		res.status(200).json({ path: contentPath });
+		const path = await createAbsPath(name, fileName, type);
+		res.status(200).json({ path: path });
 	} catch (error) {
 		writeTheTime(chalk.red(`Erreur lors de la recherche du contenu : ${error}`));
 		res.status(500).json({ error: 'Une erreur est survenue lors de la recherche du contenu.' });
