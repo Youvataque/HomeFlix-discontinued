@@ -94,7 +94,7 @@ router.post('/contentSearch', authMiddleware, async (req: Request, res: Response
 	}
 	try {
 		const path = await createAbsPath(name, fileName, type);
-		res.status(200).json({ path: path });
+		res.status(200).json({ path: encodeURIComponent(path) });
 	} catch (error) {
 		writeTheTime(chalk.red(`Erreur lors de la recherche du contenu : ${error}`));
 		res.status(500).json({ error: 'Une erreur est survenue lors de la recherche du contenu.' });
@@ -104,7 +104,7 @@ router.post('/contentSearch', authMiddleware, async (req: Request, res: Response
 /////////////////////////////////////////////////////////////////////////////////
 // Route pour lire une vidéo en streaming
 router.get('/streamVideo', authMiddleware, (req, res) => {
-	const videoPath = req.query.path;
+	const videoPath = decodeURIComponent(req.query.path as string);
 
 	if (!videoPath || typeof videoPath !== 'string') {
 		return res.status(400).json({ message: 'Le chemin du fichier vidéo est requis.' });
