@@ -283,6 +283,7 @@ class _MainContentPagesState extends State<MainContentPages> {
 	Widget dedicatedPages() {
 		return widget.movie ? 
 				MoviePages(
+          id: widget.id,
 					serveurData: widget.serveurData,
 					movie: widget.movie,
 				)
@@ -294,6 +295,7 @@ class _MainContentPagesState extends State<MainContentPages> {
 							return myIndicator(context, 10);
 						} else {
 							return SeriesPages(
+                id: widget.id,
 								serveurData: widget.serveurData,
 								bigData: widget.bigData,
 								seasContent: seasContent,

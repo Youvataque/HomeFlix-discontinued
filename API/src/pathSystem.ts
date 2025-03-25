@@ -3,7 +3,7 @@ import { calculateContentSimilarity, calculateWordSimilarity } from "./actions.j
 import { cleanName, extractInfo, parseLsOutput, writeTheTime } from "./tools.js";
 import { getContentDetails, moviePossHash, SeriePossHash } from "./torrentTools.js";
 import { stat } from 'fs/promises';
-import { SearchResult } from "./interfaces.js";
+import { MediaItem, SearchInfos, SearchResult } from "./interfaces.js";
 import path from "path";
 import { exec } from "child_process";
 import util from "util";
@@ -88,14 +88,36 @@ export async function completePath(name: string, movie: boolean, tempPath:string
 // Fonction pour fabriquer le path vers le fichier
 export async function createAbsPath(name: string, originalName: string, movie: boolean): Promise<string> {
 	const datas: SearchResult = await contentBestHash(name, originalName, movie);
-	const details = await getContentDetails(datas.hash);
-	const tempPath = details.save_path + '/' + details.name;
-	if (await isFile(tempPath)) {
-		return tempPath;
-	} else if (await isDirectory(tempPath)) {
-		return await completePath(goodName(name, originalName, datas.name), movie, tempPath);
+	if (datas.hash != "") {
+		const details = await getContentDetails(datas.hash);
+		const tempPath = details.save_path + '/' + details.name;
+		if (await isFile(tempPath)) {
+			return tempPath;
+		} else if (await isDirectory(tempPath)) {
+			return await completePath(goodName(name, originalName, datas.name), movie, tempPath);
+		} else {
+			writeTheTime(chalk.red(`Erreur ! Aucun chemin d'accès trouvé pour ${name}`));
+			return "";
+		}
 	} else {
 		writeTheTime(chalk.red(`Erreur ! Aucun chemin d'accès trouvé pour ${name}`));
 		return "";
+	}
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+// retourne le path pour un contenue donné.
+export function getContentPath(infos: SearchInfos, content: MediaItem): string {
+	if (infos.movie) {
+		return content.path;
+	} else {
+		const season: Record<string, any> = content.seasons[`S${infos.season}`];
+		if (season != null) {
+			const paths: Array<string> = season['paths'];
+			if (paths && infos.episode > 0 && infos.episode <= paths.length) {
+				return paths[infos.episode - 1];
+			}
+		}
+		return "Error";
 	}
 }

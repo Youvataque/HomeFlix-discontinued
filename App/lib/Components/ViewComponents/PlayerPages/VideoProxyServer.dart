@@ -46,7 +46,9 @@ class VideoProxyServer {
       final streamResponse = await http.Client().send(
         http.Request('GET', Uri.parse(decodedUrl))..headers.addAll(headers),
       );
-
+      if (streamResponse.statusCode == 404) {
+        return Response.notFound('Fichier introuvable');
+      }
       bool isPartialContent = streamResponse.statusCode == 206;
       return Response(
         streamResponse.statusCode,

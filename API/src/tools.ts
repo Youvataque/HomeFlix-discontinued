@@ -175,3 +175,17 @@ export function getActualTime(): string {
 export function writeTheTime(str: string) {
     console.log(`${chalk.bgGrey(getActualTime())} : ${str}`);
 }
+
+/////////////////////////////////////////////////////////////////////////////////
+// transforme s1 en s01.
+export function formatSeasCode(code: string): string {
+    return code.replace(/s(\d)\b/i, (_match, digit) => {
+        return `s0${digit}`;
+    });
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+// transforme 1 en e01
+export function formatEpCode(num: number): string {
+    return `e${num.toString().padStart(2, '0')}`;
+}

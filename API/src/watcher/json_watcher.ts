@@ -5,6 +5,7 @@ import chalk from 'chalk';
 import { contentBestHash } from '../pathSystem.js';
 import { qbittorrentAPI } from '../torrentTools.js';
 import { removeFromJson } from '../actions.js';
+import { writeGoodPath } from '../pathWriteSystem.js';
 
 dotenv.config();
 
@@ -34,45 +35,49 @@ async function getTorrentProgress(name: string, originalName: string, movie: boo
 /////////////////////////////////////////////////////////////////////////////////
 // fonction pour vérifer l'état des films dans la queu, l'enregistrer et déplacer si besoin les contenu  terminés
 async function checkAndProcessQueue() {
-	let countError: number = 0;
+	let countError = 0;
+	const completedItems: { key: string; item: any; type: 'movie' | 'tv' }[] = [];
+
 	try {
 		db.read();
 		const jsonData: DataStructure = db.data;
-		if (Object.keys(jsonData.queue).length === 0) return;
 
 		for (const key in jsonData.queue) {
 			const item = jsonData.queue[key];
 			const percent = await getTorrentProgress(item.title, item.originalTitle, item.media);
+
 			if (percent !== undefined) {
 				item.percent = percent;
-				jsonData.queue[key].percent = percent;
-			}
-			else if (percent == undefined && countError !== 3) {
-				countError++;
+			} else if (++countError >= 3) {
+				await removeFromJson("queue", key, db);
+				continue;
 			} else {
-				removeFromJson("queue", key, db);
+				continue;
 			}
-			if (item.percent >= 99.5) { 
-				if (item.media) {
-					jsonData.movie[key] = item;
-				} else {
-					jsonData.tv[key] = item;
-				}
+			if (item.percent >= 99) {
 				delete jsonData.queue[key];
+				completedItems.push({ key, item, type: item.media ? 'movie' : 'tv' });
 			} else {
 				writeTheTime(chalk.yellow(`Encore du boulot : ${percent}`));
 			}
 		}
-		try {
-			db.read();
-			db.data = jsonData;
-			db.write();
-			writeTheTime(chalk.green('DB mise à jour avec succès'));
-		} catch (err) {
-			writeTheTime(chalk.red(`Erreur lors de la mise à jour de la DB : ${err}`));
-		}
+		db.data = jsonData;
+		db.write();
+		writeTheTime(chalk.green('DB mise à jour avec succès'));
 	} catch (err) {
-		writeTheTime(chalk.red(`Erreur lors de la lecture de la DB: ${err}`));
+		writeTheTime(chalk.red(`Erreur lors du traitement de la file : ${err}`));
+		return;
+	}
+	for (const { key, item, type } of completedItems) {
+		try {
+			const newItem = await writeGoodPath(item);
+			db.read();
+			db.data[type][key] = newItem;
+			db.write();
+			writeTheTime(chalk.cyan(`Path ajouté avec succès pour ${key}`));
+		} catch (err) {
+			writeTheTime(chalk.red(`Erreur lors du traitement du path pour ${key} : ${err}`));
+		}
 	}
 }
 

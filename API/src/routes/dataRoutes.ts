@@ -3,11 +3,12 @@ import fs from 'fs';
 import dotenv from 'dotenv';
 import { db, getActualTime, getMimeType, specDb, writeTheTime } from "../tools.js";
 import authMiddleware from './authMiddleware.js';
-import { DataStructure } from '../interfaces.js';
+import { DataStructure, SearchInfos } from '../interfaces.js';
 import chalk from 'chalk';
-import { createAbsPath } from '../pathSystem.js';
+import { createAbsPath, getContentPath } from '../pathSystem.js';
 import { deleteAllTorrent, deleteOneTorrent, searchTorrent } from '../torrentTools.js';
 import { removeFromJson } from '../actions.js';
+import { writeGoodPath } from '../pathWriteSystem.js';
 
 dotenv.config();
 const router: Router = Router();
@@ -39,7 +40,7 @@ router.get('/specStatus', authMiddleware,(req: Request, res: Response) => {
 
 /////////////////////////////////////////////////////////////////////////////////
 // Route pour ajouter des données
-router.post('/contentStatus', authMiddleware, (req: Request, res: Response) => {
+router.post('/contentStatus', authMiddleware, async (req: Request, res: Response) => {
 	try {
 		const { newData, where } = req.body;
 
@@ -57,6 +58,7 @@ router.post('/contentStatus', authMiddleware, (req: Request, res: Response) => {
 			"name": newData["name"],
 			"media": newData["media"],
 			"percent": newData["percent"],
+			"path": "",
 			"date": getActualTime(),
 			"seasons": newData["seasons"]
 		};
@@ -86,15 +88,52 @@ router.post('/contentErase', authMiddleware, async (req: Request, res: Response)
 
 /////////////////////////////////////////////////////////////////////////////////
 // Route pour rechercher la localisation d'un contenu
-router.post('/contentSearch', authMiddleware, async (req: Request, res: Response) => {
-	const { name, fileName, type } = req.body;
+router.post('/manualUpdate', async (req: Request, res: Response) => {
+	const {id, movie} = req.body;
+	try {
+		db.read();
+		const data = db.data;
+		for (const key in movie as boolean ? data.movie : data.tv) {
+			if (id as string == key) {
+				movie as boolean ? data.movie[key] : data.tv[key] = await writeGoodPath(movie as boolean ? data.movie[key] : data.tv[key]);
+				break ;
+			}
+		}
+		db.data = data;
+		db.write();
+		writeTheTime(chalk.green("Mise à jour manuelle terminé."))
+		return res.status(201).json({message : "Mise à jour manuelle terminé."})
+	} catch (error) {
+		writeTheTime(chalk.red(`Erreur lors de la recherche du contenu : ${error}`));
+		res.status(500).json({ error: 'Une erreur est survenue lors de la recherche du contenu.' });
+	}
+});
 
-	if (!name || typeof name !== 'string') {
-		return res.status(400).json({ error: 'Le nom et le type de contenu sont requis.' });
+/////////////////////////////////////////////////////////////////////////////////
+// Route pour rechercher la localisation d'un contenu
+router.post('/contentSearch',authMiddleware, async (req: Request, res: Response) => {
+	const {id, movie, season, episode} = req.body;
+	let path: string = "";
+	const infos: SearchInfos = {
+		id: id as string,
+		movie: movie as boolean,
+		season: season as number,
+		episode: episode as number
 	}
 	try {
-		const path = await createAbsPath(name, fileName, type);
-		res.status(200).json({ path: encodeURIComponent(path) });
+		db.read();
+		const data = db.data;
+		const section = infos.movie ? data.movie : data.tv;
+		if (section && section[infos.id]) {
+			path = getContentPath(infos, section[infos.id]);
+			if (path != "Error") {
+				writeTheTime(chalk.green(`Le path pour ${infos.id} a été trouvé : ${path}.`));
+				return res.status(201).json({"path" : encodeURIComponent(path)});
+			}
+		}
+		path = "Error";
+		writeTheTime(chalk.red("Erreur dans la recherche de path, aucun contenue trouvé!"));
+		res.status(404).json({"path" : path});
 	} catch (error) {
 		writeTheTime(chalk.red(`Erreur lors de la recherche du contenu : ${error}`));
 		res.status(500).json({ error: 'Une erreur est survenue lors de la recherche du contenu.' });

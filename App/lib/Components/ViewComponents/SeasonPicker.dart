@@ -132,7 +132,7 @@ class _SeasonPickerState extends State<SeasonPicker> {
 						),
 					),
 					onPressed: () {
-						if (widget.disabledIndexes.contains(selectedIndex + 1)) {
+						if (widget.disabledIndexes.contains(selectedIndex + 1) || widget.strList.isEmpty) {
 
 						} else {
 							setState(() {

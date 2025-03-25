@@ -5,9 +5,10 @@ export interface MediaItem {
 	originalTitle: string;
 	name: string;
 	media: boolean;
+	path: string;
 	percent:number;
 	date: string;
-	seasons: Record<string, unknown>
+	seasons: Record<string, any>
 }
 
 export interface DataStructure {
@@ -116,4 +117,15 @@ export interface ContentDetails {
 	up_limit: number;
 	up_speed: number;
 	up_speed_avg: number;
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////
+// interface pathSystem
+
+export interface SearchInfos {
+	season: number;
+	episode: number;
+	id: string;
+	movie: boolean;
 }

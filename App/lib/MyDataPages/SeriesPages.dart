@@ -9,12 +9,14 @@ import 'package:homeflix/main.dart';
 ///////////////////////////////////////////////////////////////
 /// Template des pages de séries
 class SeriesPages extends StatefulWidget {
+  final String id;
 	final Map<String, dynamic> serveurData;
 	final Map<String, dynamic> bigData;
 	final List<Map<String, dynamic>> seasContent;
 	final bool movie;
 	const SeriesPages({
 		super.key,
+    required this.id,
 		required this.serveurData,
 		required this.bigData,
 		required this.seasContent,
@@ -154,13 +156,19 @@ class _SeriesPagesState extends State<SeriesPages> {
 	///////////////////////////////////////////////////////////////
 	/// lance la vidéo lors de l'appuie sur un épisode
 	void onEpTap(int index) async {
-		String name = widget.serveurData['title'];
-		name += " S${season.toString().padLeft(2, '0')} E${index.toString().padLeft(2, '0')}";
-		final path = await NIGHTServices().searchContent(name, widget.serveurData['name'], widget.movie) ?? "null";
+		final path = await NIGHTServices().searchContent(
+      widget.id,
+      season,
+      index,
+      widget.movie
+    );
+    if (path == null) {
+      print("Path non trouvé, annulation.");
+      return;
+    }
 		final encodedPath = Uri.encodeComponent(path);
 		final videoUrl = "http://${dotenv.get('NIGHTCENTER_IP')}:4000/api/streamVideo?path=$encodedPath";
 		final proxyUrl = await mainKey.currentState!.getProxyUrl(videoUrl);
-		print("donne : $name -- path : $path");
 		if (mounted) {
 			Navigator.push(
 					context,

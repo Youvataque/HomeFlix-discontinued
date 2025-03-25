@@ -8,10 +8,12 @@ import 'package:homeflix/main.dart';
 ///////////////////////////////////////////////////////////////
 /// template des pages de film
 class MoviePages extends StatefulWidget {
+  final String id;
 	final Map<String, dynamic> serveurData;
 	final bool movie;
 	const MoviePages({
 		super.key,
+    required this.id,
 		required this.serveurData,
 		required this.movie
 	});
@@ -32,16 +34,19 @@ class _MoviePagesState extends State<MoviePages> {
 			child: ElevatedButton(
 				onPressed: () async {
 					final path = await NIGHTServices().searchContent(
-							widget.serveurData['title'],
-							widget.serveurData['name'],
-							widget.movie
-					) ?? "null";
+							widget.id,
+              0,
+              0,
+              widget.movie
+					);
+          if (path == null) {
+            print("Path non trouvé, annulation.");
+            return;
+          }
 					final encodedPath = Uri.encodeComponent(path);
 					final videoUrl = "http://${dotenv.get('NIGHTCENTER_IP')}:4000/api/streamVideo?path=$encodedPath";
 					String proxyUrl = "";
-
-						proxyUrl = await mainKey.currentState!.getProxyUrl(videoUrl);
-
+					proxyUrl = await mainKey.currentState!.getProxyUrl(videoUrl);
 					Navigator.push(
 							context,
 							MaterialPageRoute(builder: (context) => VlcVideoPlayer(videoUrl: proxyUrl))

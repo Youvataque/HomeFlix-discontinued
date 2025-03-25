@@ -38,6 +38,7 @@ class _DownloadPopUpState extends State<DownloadPopUp> {
 	int isIn = 0;
 	List<String> seasonList = [];
 	List<String> episodeList = [];
+	List<int> epFilter = [];
 	SeasonPickStruct datas = SeasonPickStruct(
 		seasonStart: 0,
 		seasonEnd: 0,
@@ -50,9 +51,6 @@ class _DownloadPopUpState extends State<DownloadPopUp> {
 		super.initState();
 		for (int x = 1; x <= widget.nbSaisons; x++) {
 			seasonList.add("Saison $x");
-		}
-		for (int x = 1; x <= 30; x++) {
-			episodeList.add("Épisode $x");
 		}
 	}
 
@@ -128,7 +126,7 @@ class _DownloadPopUpState extends State<DownloadPopUp> {
 	Widget build(BuildContext context2) {
 		return PopUpTemplate(
 			padding: MediaQuery.sizeOf(context).height * 18 / 100,
-			heigth: widget.movie ? 250 : 329,
+			heigth: widget.movie ? 255 : 329,
 			child: ValueListenableBuilder<Map<String, dynamic>>(
 				valueListenable: mainKey.currentState!.dataStatusNotifier,
 				builder: (context, dataStatus, child) {
@@ -252,30 +250,45 @@ class _DownloadPopUpState extends State<DownloadPopUp> {
 		);
 	}
 
+	void updateSelectedSeas(int p0, Map<String, dynamic> serverContent) {
+		datas.seasonEp = p0;
+		if (serverContent[widget.tmdbId] != null) {
+			epFilter = List<int>.from(
+				serverContent[widget.tmdbId]["seasons"]["S$p0"]?["episode"] ?? []
+			);
+		}
+		episodeList = [];
+		for (int x = 1; x <= widget.seasons[p0 - 1]['episode_count']; x++) {
+			episodeList.add("Épisode $x");
+		}
+		setState(() {});
+	}
+
 	///////////////////////////////////////////////////////////////
 	/// partie 2 de la sections séries (pour gérer les épisodes d'une saison)
 	Wrap seriesEpisodePart(List<int> alreadyIn, Map<String, dynamic> serverContent) {
-		List<int> epFilter = [];
-		if (serverContent[widget.tmdbId] != null) {
-			epFilter = serverContent[widget.tmdbId]["seasons"]["S2"]["episode"].cast<int>();
-		}
-		return Wrap(
-			alignment: WrapAlignment.center,
-			children: [
-				SeasonPicker(strList: seasonList, pickerTitle: "Saison selectionné", func: (p0) => datas.seasonEp = p0, disabledIndexes: alreadyIn),
-				Padding(
-					padding: const EdgeInsets.only(top: 5),
-					child: seriesText("  à  ", null),
-				),
-				SeasonPicker(
-					strList: episodeList,
-					pickerTitle: "votre épisode",
-					func: (p0) => datas.episode = p0,
-					disabledIndexes: epFilter
-				)
-			],
-		);
-	}
+	return Wrap(
+		alignment: WrapAlignment.center,
+		children: [
+			SeasonPicker(
+				strList: seasonList,
+				pickerTitle: "Saison selectionné",
+				func: (p0) => updateSelectedSeas(p0, serverContent),
+				disabledIndexes: alreadyIn,
+			),
+			Padding(
+				padding: const EdgeInsets.only(top: 5),
+				child: seriesText("  à  ", null),
+			),
+			SeasonPicker(
+				strList: episodeList,
+				pickerTitle: "votre épisode",
+				func: (p0) => datas.episode = p0,
+				disabledIndexes: epFilter
+			)
+		],
+	);
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////// zone des fonctions
@@ -335,6 +348,7 @@ class _DownloadPopUpState extends State<DownloadPopUp> {
 				seasonEp["seasons"]["S$x"] = {
 					"complete" : true,
 					"episode" : [-1],
+					"size": widget.seasons[x - 1]['episode_count'],
 					"title" : widget.title,
 				};
 			} else if (serverContent[widget.tmdbId] != null) {

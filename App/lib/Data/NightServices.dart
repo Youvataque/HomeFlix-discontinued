@@ -5,7 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 class NIGHTServices {
 	static Map<String, dynamic> specStatus = {};
-
+  final String port = '4000';
 	Future<String?> _getIdToken() async {
 		User? user = FirebaseAuth.instance.currentUser;
 		return user != null ? await user.getIdToken() : null;
@@ -23,7 +23,7 @@ class NIGHTServices {
 		}
 
 		final response = await http.get(
-			Uri.parse("http://${dotenv.get('NIGHTCENTER_IP')}:4000/api/contentStatus"),
+			Uri.parse("http://${dotenv.get('NIGHTCENTER_IP')}:$port/api/contentStatus"),
 			headers: {
 				'Authorization': 'Bearer $idToken',
 			},
@@ -50,7 +50,7 @@ class NIGHTServices {
 		}
 
 		final response = await http.get(
-			Uri.parse("http://${dotenv.get('NIGHTCENTER_IP')}:4000/api/specStatus"),
+			Uri.parse("http://${dotenv.get('NIGHTCENTER_IP')}:$port/api/specStatus"),
 			headers: {
 				'Authorization': 'Bearer $idToken',
 			},
@@ -78,7 +78,7 @@ class NIGHTServices {
 		}
 
 		final response = await http.get(
-			Uri.parse("http://${dotenv.get('NIGHTCENTER_IP')}:4000/api/fetchTorrentContent?page=$page&name=$name"),
+			Uri.parse("http://${dotenv.get('NIGHTCENTER_IP')}:$port/api/fetchTorrentContent?page=$page&name=$name"),
 			headers: {
 				'Authorization': 'Bearer $idToken',
 			},
@@ -97,7 +97,7 @@ class NIGHTServices {
 	//////////////////////////////////////////////////////////////////
 	/// fonction pour envoyer la requête de téléchargement au serveur
 	Future<void> sendDownloadRequest(String id, String filename) async {
-		final apiUrl = 'http://${dotenv.get('NIGHTCENTER_IP')}:4000/api/contentDl';
+		final apiUrl = 'http://${dotenv.get('NIGHTCENTER_IP')}:$port/api/contentDl';
 
 		try {
 			final user = FirebaseAuth.instance.currentUser;
@@ -137,7 +137,7 @@ class NIGHTServices {
 			return;
 		}
 
-		final url = Uri.parse("http://${dotenv.get('NIGHTCENTER_IP')}:4000/api/contentStatus");
+		final url = Uri.parse("http://${dotenv.get('NIGHTCENTER_IP')}:$port/api/contentStatus");
 		final headers = {
 			'Content-Type': 'application/json',
 			'Authorization': 'Bearer $idToken',
@@ -164,7 +164,7 @@ class NIGHTServices {
 			return;
 		}
 
-		final url = Uri.parse("http://${dotenv.get('NIGHTCENTER_IP')}:4000/api/contentErase");
+		final url = Uri.parse("http://${dotenv.get('NIGHTCENTER_IP')}:$port/api/contentErase");
 		final headers = {
 			'Content-Type': 'application/json',
 			'Authorization': 'Bearer $idToken',
@@ -183,7 +183,7 @@ class NIGHTServices {
 
 	///////////////////////////////////////////////////////////////
 	/// Fonction pour appeler la route `contentSearch`
-	Future<String?> searchContent(String name, String fileName, bool type) async {
+	Future<String?> searchContent(String id, int season, int episode, bool movie) async {
 		final idToken = await _getIdToken();
 
 		if (idToken == null) {
@@ -191,7 +191,7 @@ class NIGHTServices {
 			return null;
 		}
 
-		final apiUrl = 'http://${dotenv.get('NIGHTCENTER_IP')}:4000/api/contentSearch';
+		final apiUrl = 'http://${dotenv.get('NIGHTCENTER_IP')}:$port/api/contentSearch';
 
 		try {
 			final response = await http.post(
@@ -201,13 +201,14 @@ class NIGHTServices {
 					'Authorization': 'Bearer $idToken',
 				},
 				body: jsonEncode({
-					'name': name,
-					'fileName': fileName,
-					'type': type,
+					'id': id,
+          'season': season,
+          'episode': episode,
+          'movie': movie
 				}),
 			);
 
-			if (response.statusCode == 200) {
+			if (response.statusCode == 201) {
 				final data = json.decode(response.body);
 				return data['path'] as String?;
 			} else {

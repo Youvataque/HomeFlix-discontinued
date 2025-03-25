@@ -31,7 +31,21 @@ class _VlcVideoPlayerState extends State<VlcVideoPlayer> {
 			DeviceOrientation.landscapeLeft,
 			DeviceOrientation.landscapeRight,
 		]);
+    closeIfError();
 	}
+
+  void  closeIfError() {
+    Future.delayed(const Duration(seconds: 5), () {
+      if (!_vlcPlayerController.value.isPlaying && mounted) {
+        print("❌ Timeout: fermeture du lecteur");
+        SystemChrome.setPreferredOrientations([
+          DeviceOrientation.portraitUp,
+          DeviceOrientation.portraitDown,
+        ]);
+        Navigator.pop(context);
+      }
+    });
+  }
 
 	void _initializePlayer() {
 		_vlcPlayerController = VlcPlayerController.network(
