@@ -3,7 +3,7 @@ import fs from 'fs';
 import dotenv from 'dotenv';
 import { db, getActualTime, getMimeType, specDb, writeTheTime } from "../tools.js";
 import authMiddleware from './authMiddleware.js';
-import { DataStructure, SearchInfos } from '../interfaces.js';
+import { DataStructure, MediaItem, SearchInfos } from '../interfaces.js';
 import chalk from 'chalk';
 import { createAbsPath, getContentPath } from '../pathSystem.js';
 import { deleteAllTorrent, deleteOneTorrent, searchTorrent } from '../torrentTools.js';
@@ -84,6 +84,38 @@ router.post('/contentErase', authMiddleware, async (req: Request, res: Response)
 		del = await deleteAllTorrent(newData);
 	}
 	if (del) await removeFromJson(newData["media"] ? "movie" : "tv", newData["id"], db);
+});
+
+/////////////////////////////////////////////////////////////////////////////////
+// Affiche les paths théorique.
+router.post('/theoricalPath', async (req: Request, res: Response) => {
+	const {id, movie} = req.body;
+	let item: MediaItem = {
+		title: "",
+		name: "",
+		media: true,
+		date: "",
+		percent: 0,
+		originalTitle: "",
+		path: "",
+		seasons: {},
+
+	}
+	try {
+		db.read();
+		const data = db.data;
+		for (const key in movie as boolean ? data.movie : data.tv) {
+			if (id as string == key) {
+				item = await writeGoodPath(movie as boolean ? data.movie[key] : data.tv[key]);
+				break ;
+			}
+		}
+		writeTheTime(chalk.green("Path théorique trouvé !"))
+		return res.status(201).json({result: item})
+	} catch (error) {
+		writeTheTime(chalk.red(`Erreur lors de la recherche du contenu : ${error}`));
+		res.status(500).json({ error: 'Une erreur est survenue lors de la recherche du contenu.' });
+	}
 });
 
 /////////////////////////////////////////////////////////////////////////////////
