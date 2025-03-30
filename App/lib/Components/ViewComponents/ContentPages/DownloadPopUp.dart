@@ -371,7 +371,11 @@ class _DownloadPopUpState extends State<DownloadPopUp> {
 		if (serverCheck) {
 			if (tempData.containsKey("S${datas.seasonEp}")) {
 				toAdd = tempData["S${datas.seasonEp}"]["episode"].cast<int>();
-				titles = tempData["S${datas.seasonEp}"]["titles"].cast<String>();
+				if (tempData["S${datas.seasonEp}"]["titles"] != null) {
+					titles = tempData["S${datas.seasonEp}"]["titles"].cast<String>();
+				} else {
+					titles = [];
+				}
 			}
 		}
 		seasonEp["seasons"] = {};

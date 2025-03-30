@@ -46,6 +46,7 @@ export function cleanName(name: string, movie: boolean): string {
         .replace(/\b(saison|season)\s?(\d{1,2})\b/gi, (match, p1, p2) => `s${p2.padStart(2, '0')}`)
         .replace(/[\s._\-:(),]+/g, ' ')
         .replace(/[\[\]]+/g, ' ')
+        .replace(/'/g, "")
         .trim();
     return removeAccents(
         movie ? result : result.replace(/\b(zero|one|two|three|four|five|six|seven|eight|nine|ten|un|deux|trois|quatre|cinq|six|sept|huit|neuf|dix)\b/gi, (match) => numberWords[match.toLowerCase()] || match)
