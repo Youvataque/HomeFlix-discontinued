@@ -15,7 +15,7 @@ export const qbittorrentAPI = axios.create({
 export async function searchTorrent(name: string): Promise<SearchResult> {
 	const result: SearchResult = {
 		hash: "",
-		percent: 70,
+		percent: 60,
 		name : name
 	};
 	try {
