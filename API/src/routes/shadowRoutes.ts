@@ -34,13 +34,31 @@ router.post('/contentDl', authMiddleware, async (req: Request, res: Response) =>
 		writeTheTime(chalk.red('L\'id du fichier est requise.'));
 		return res.status(400).json({ message: 'L\'id du fichier est requise.' });
 	}
+
 	const urlData: Record<string, string> = await fetchSrcUrl(id);
+	const downloadUrl = urlData['url'];
+
+	if (!downloadUrl || downloadUrl === 'none') {
+		writeTheTime(chalk.yellow(`Pas de lien de téléchargement trouvé pour l'id : ${id}`));
+		return res.status(404).json({ message: 'Aucun lien de téléchargement disponible.' });
+	}
+
 	try {
 		const response = await axios({
 			method: 'GET',
-			url: urlData['url'],
-			responseType: 'stream'
+			url: downloadUrl,
+			responseType: 'stream',
+			headers: {
+				'Accept': '*/*',
+				'User-Agent': 'Mozilla/5.0'
+			},
+			validateStatus: () => true
 		});
+
+		if (response.status !== 200) {
+			writeTheTime(chalk.red(`Téléchargement refusé par la source (code ${response.status})`));
+			return res.status(response.status).json({ message: 'Téléchargement refusé par la source distante.' });
+		}
 
 		let finalFilename = filename || 'downloaded_file.torrent';
 		if (!filename) {
