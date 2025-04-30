@@ -37,6 +37,6 @@ Cette API est conçue pour récupérer et formater les informations issues de la
 	
 ## Installation et mise en route (version avec auth)
 
-Concrètement, cette version s’installe de manière similaire à la version classique. Cependant, il est nécessaire de créer un compte Firebase, d’y ajouter les utilisateurs manuellement, puis d’intégrer les fichiers de configuration Firebase dans l’API.
+Concrètement, cette version n'a pas d'intallateur simplifié, de plus il est nécessaire de créer un compte Firebase, d’y ajouter les utilisateurs manuellement, puis d’intégrer les fichiers de configuration Firebase dans l’API.
 
-Le système étant relativement complexe à expliquer — et le deviendra encore davantage avec le temps —, je vous recommande d’opter pour la version simple. Cela évitera également toute dérive, comme la commercialisation d’un service illégal.
+Le système étant relativement complexe à expliquer — et le deviendra encore davantage avec le temps —, je vous recommande d’opter pour la version simple.
