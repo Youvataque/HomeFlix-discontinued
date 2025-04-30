@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="WEB_MODULE" version="4">
+  <component name="NewModuleRootManager" inherit-compiler-output="true">
+    <exclude-output />
+    <content url="file://$MODULE_DIR$">
+      <excludeFolder url="file://$MODULE_DIR$/.tmp" />
+      <excludeFolder url="file://$MODULE_DIR$/temp" />
+      <excludeFolder url="file://$MODULE_DIR$/tmp" />
+      <excludeFolder url="file://$MODULE_DIR$/App/.dart_tool" />
+      <excludeFolder url="file://$MODULE_DIR$/App/.pub" />
+      <excludeFolder url="file://$MODULE_DIR$/App/build" />
+      <excludeFolder url="file://$MODULE_DIR$/App/ios/.symlinks/plugins/haptic_feedback/.dart_tool" />
+      <excludeFolder url="file://$MODULE_DIR$/App/ios/.symlinks/plugins/haptic_feedback/.pub" />
+      <excludeFolder url="file://$MODULE_DIR$/App/ios/.symlinks/plugins/haptic_feedback/build" />
+      <excludeFolder url="file://$MODULE_DIR$/App/ios/.symlinks/plugins/haptic_feedback/example/.dart_tool" />
+      <excludeFolder url="file://$MODULE_DIR$/App/ios/.symlinks/plugins/haptic_feedback/example/.pub" />
+      <excludeFolder url="file://$MODULE_DIR$/App/ios/.symlinks/plugins/haptic_feedback/example/build" />
+      <excludeFolder url="file://$MODULE_DIR$/App/ios/.symlinks/plugins/flutter_vlc_player/.dart_tool" />
+      <excludeFolder url="file://$MODULE_DIR$/App/ios/.symlinks/plugins/flutter_vlc_player/.pub" />
+      <excludeFolder url="file://$MODULE_DIR$/App/ios/.symlinks/plugins/flutter_vlc_player/build" />
+      <excludeFolder url="file://$MODULE_DIR$/App/ios/.symlinks/plugins/flutter_vlc_player/example/.dart_tool" />
+      <excludeFolder url="file://$MODULE_DIR$/App/ios/.symlinks/plugins/flutter_vlc_player/example/.pub" />
+      <excludeFolder url="file://$MODULE_DIR$/App/ios/.symlinks/plugins/flutter_vlc_player/example/build" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="Dart SDK" level="project" />
+    <orderEntry type="library" name="Dart Packages" level="project" />
+  </component>
+</module>

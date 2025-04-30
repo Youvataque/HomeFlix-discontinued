@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "207859538194",
+    "project_id": "homeflix-438f9",
+    "storage_bucket": "homeflix-438f9.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:207859538194:android:1b9bb3483b18663858fbcb",
+        "android_client_info": {
+          "package_name": "com.youvataque.homeflix"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDP8bM5IPZ2x94AwvjWeY2ODEC_3rMDFVs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

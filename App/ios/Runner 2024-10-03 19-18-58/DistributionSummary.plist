@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>homeflix.ipa</key>
+	<array>
+		<dict>
+			<key>architectures</key>
+			<array>
+				<string>arm64</string>
+			</array>
+			<key>buildNumber</key>
+			<string>1</string>
+			<key>certificate</key>
+			<dict>
+				<key>SHA1</key>
+				<string>F58F3FCD919BA75C7079CCB6F6E013807CB37BFD</string>
+				<key>dateExpires</key>
+				<string>22/01/2025</string>
+				<key>type</key>
+				<string>iOS Distribution</string>
+			</dict>
+			<key>embeddedBinaries</key>
+			<array>
+				<dict>
+					<key>architectures</key>
+					<array>
+						<string>arm64</string>
+					</array>
+					<key>buildNumber</key>
+					<string>1.0</string>
+					<key>certificate</key>
+					<dict>
+						<key>SHA1</key>
+						<string>F58F3FCD919BA75C7079CCB6F6E013807CB37BFD</string>
+						<key>dateExpires</key>
+						<string>22/01/2025</string>
+						<key>type</key>
+						<string>iOS Distribution</string>
+					</dict>
+					<key>name</key>
+					<string>App.framework</string>
+					<key>team</key>
+					<dict>
+						<key>id</key>
+						<string>6LYRZC3ZU3</string>
+						<key>name</key>
+						<string>YANNIS MAXIME SEGUIN</string>
+					</dict>
+					<key>versionNumber</key>
+					<string>1.0</string>
+				</dict>
+				<dict>
+					<key>architectures</key>
+					<array>
+						<string>arm64</string>
+					</array>
+					<key>buildNumber</key>
+					<string>1.0</string>
+					<key>certificate</key>
+					<dict>
+						<key>SHA1</key>
+						<string>F58F3FCD919BA75C7079CCB6F6E013807CB37BFD</string>
+						<key>dateExpires</key>
+						<string>22/01/2025</string>
+						<key>type</key>
+						<string>iOS Distribution</string>
+					</dict>
+					<key>name</key>
+					<string>Flutter.framework</string>
+					<key>team</key>
+					<dict>
+						<key>id</key>
+						<string>6LYRZC3ZU3</string>
+						<key>name</key>
+						<string>YANNIS MAXIME SEGUIN</string>
+					</dict>
+					<key>versionNumber</key>
+					<string>1.0</string>
+				</dict>
+			</array>
+			<key>entitlements</key>
+			<dict>
+				<key>application-identifier</key>
+				<string>6LYRZC3ZU3.com.youvataque.homeflix</string>
+				<key>com.apple.developer.team-identifier</key>
+				<string>6LYRZC3ZU3</string>
+				<key>get-task-allow</key>
+				<false/>
+			</dict>
+			<key>name</key>
+			<string>Runner.app</string>
+			<key>profile</key>
+			<dict>
+				<key>UUID</key>
+				<string>007d45f1-e72f-4ba4-9672-ea2c087b5ec0</string>
+				<key>dateExpires</key>
+				<string>22/01/2025</string>
+				<key>name</key>
+				<string>homeflix_profil</string>
+			</dict>
+			<key>team</key>
+			<dict>
+				<key>id</key>
+				<string>6LYRZC3ZU3</string>
+				<key>name</key>
+				<string>YANNIS MAXIME SEGUIN</string>
+			</dict>
+			<key>versionNumber</key>
+			<string>1.0.0</string>
+		</dict>
+	</array>
+</dict>
+</plist>
