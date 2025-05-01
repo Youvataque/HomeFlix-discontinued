@@ -53,6 +53,8 @@ Cette API est conçue pour récupérer et formater les informations issues de la
 
 - Le serveur se configure et se lance.
 
+- Faire sur votre machine : ufw allow 5001
+
 ### App mobile (Android)
 
 - Télécharger et installer le .apk présent dans Homeflix/Installation/Android sur votre téléphone
