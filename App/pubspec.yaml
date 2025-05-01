@@ -46,9 +46,11 @@ dependencies:
   package_info_plus: ^8.3.0
   shared_preferences: ^2.5.3
 flutter_launcher_icons:
-  image_path: "src/images/icon.jpg"
   android: true
   ios: true
+  image_path: "src/images/icon.jpg"
+  adaptive_icon_background: "#0f1d24"
+  adaptive_icon_foreground: "src/images/logo.png"
 
 dev_dependencies:
   flutter_test:
