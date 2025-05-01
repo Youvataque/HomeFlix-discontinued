@@ -47,9 +47,12 @@ dependencies:
   firebase_auth: ^5.4.1
   shelf: ^1.4.2
 flutter_launcher_icons:
-  image_path: "src/images/icon.jpg"
   android: true
   ios: true
+  image_path: "src/images/icon.jpg"
+  adaptive_icon_background: "#0f1d24"
+  adaptive_icon_foreground: "src/images/logo.png"
+
 
 dev_dependencies:
   flutter_test:
