@@ -59,7 +59,7 @@ Cette API est conçue pour récupérer et formater les informations issues de la
 
 - Télécharger et installer le .apk présent dans Homeflix/Installation/Android sur votre téléphone
 
-- Lancer l'app et taper : la clef api que vous avez choisi, l'api de votre serveur, le port du serveur (par défault 5001).
+- Lancer l'app et taper : la clef api que vous avez choisi, l'ip de votre serveur, le port du serveur (par défault 5001).
 
 - C'est pret !
 
