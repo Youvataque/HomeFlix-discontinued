@@ -47,7 +47,7 @@ Cette API est conçue pour récupérer et formater les informations issues de la
 
 - Ouvrir avec un éditeur de text "start.sh"
 
-- Modifier : PASSKEY="Votre clef si il y en a une pour le site de torrent" ; SRC_GIT="Le lien github de votre API C (celle qui gère la source)" ; API_KEY="La clef api souhaité pour le serveur"
+- Modifier (lignes 72): PASSKEY="Votre clef si il y en a une pour le site de torrent" ; SRC_GIT="Le lien github de votre API C (celle qui gère la source)" ; API_KEY="La clef api souhaité pour le serveur"
 
 - Taper : chmod u+x start.sh && ./start.sh
 
