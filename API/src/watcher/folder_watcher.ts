@@ -16,11 +16,9 @@ function openFileWhenComplete(filepath: string): void {
 
 	const checkFileComplete = setInterval(() => {
 		const currentSize = fs.statSync(filepath).size;
-
 		if (currentSize === lastSize) {
 			clearInterval(checkFileComplete);
 			writeTheTime(chalk.green(`Fichier complet : ${filepath}`));
-
 			const formData = new FormData();
 			formData.append('torrents', fs.createReadStream(filepath));
 			qbittorrentAPI

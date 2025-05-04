@@ -2,6 +2,7 @@ import dotenv from 'dotenv';
 import { DataStructure } from '../interfaces.js';
 import { db, writeTheTime } from '../tools.js';
 import chalk from 'chalk';
+import { setTimeout as sleep } from 'timers/promises';
 import { contentBestHash } from '../pathSystem.js';
 import { qbittorrentAPI } from '../torrentTools.js';
 import { removeFromJson } from '../actions.js';
@@ -44,8 +45,8 @@ async function checkAndProcessQueue() {
 
 		for (const key in jsonData.queue) {
 			const item = jsonData.queue[key];
+			await sleep(2000);
 			const percent = await getTorrentProgress(item.title, item.originalTitle, item.media);
-
 			if (percent !== undefined) {
 				item.percent = percent;
 			} else if (++countError >= 3) {
