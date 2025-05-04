@@ -6,6 +6,7 @@ import { contentBestHash } from '../pathSystem.js';
 import { qbittorrentAPI } from '../torrentTools.js';
 import { removeFromJson } from '../actions.js';
 import { writeGoodPath } from '../pathWriteSystem.js';
+import { setTimeout as sleep } from 'timers/promises';
 
 dotenv.config();
 
@@ -44,6 +45,7 @@ async function checkAndProcessQueue() {
 
 		for (const key in jsonData.queue) {
 			const item = jsonData.queue[key];
+			await sleep(2000);
 			const percent = await getTorrentProgress(item.title, item.originalTitle, item.media);
 
 			if (percent !== undefined) {

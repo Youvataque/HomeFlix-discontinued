@@ -29,7 +29,6 @@ export async function searchTorrent(name: string): Promise<SearchResult> {
 				result.hash = torrent.hash;
 			}
 		});
-		writeTheTime(chalk.yellow(`Le torrent le plus proche de : ${name} est : "${result.hash}" avec ${result.percent}%.`));
 	} catch (error) {
 		writeTheTime(chalk.red(`Erreur lors de la recherche de torrent : ${error}`));
 	}
