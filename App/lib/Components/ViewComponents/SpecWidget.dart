@@ -22,9 +22,8 @@ class _SpecWidgetState extends State<SpecWidget> {
 	void _startFetchingData() {
 		Future.delayed(const Duration(seconds: 6), () async {
 			NIGHTServices.specStatus = await NIGHTServices().fetchSpecStatus();
-			setState(() {
-			});
-			_startFetchingData(); 
+			setState(() {});
+			_startFetchingData();
 		});
 	}
 

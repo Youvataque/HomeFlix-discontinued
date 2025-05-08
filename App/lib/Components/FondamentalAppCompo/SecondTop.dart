@@ -25,7 +25,7 @@ class Secondtop extends StatefulWidget implements PreferredSizeWidget {
 		this.searchZone = const [],
 		this.searchMode = false,
 		this.dataMode = false,
-		this.query
+		this.query,
 	});
 
 	@override

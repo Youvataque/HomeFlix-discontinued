@@ -11,6 +11,7 @@ import 'package:homeflix/Data/NightServices.dart';
 import 'package:homeflix/Data/TmdbServices.dart';
 import 'package:homeflix/MyDataPages/MainContentPages.dart';
 import 'package:homeflix/main.dart';
+import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 
 class Dataview extends StatefulWidget {
 	final String secTitle;
@@ -50,26 +51,37 @@ class _DataviewState extends State<Dataview> {
 	Widget imgButton(Widget img, Map<String, dynamic> serverData, String id) {
 		return GestureDetector(
 			onTap: () async {
-				List<Map<String, dynamic>> bigData = await TMDBService().fetchContent(1, "https://api.themoviedb.org/3/${widget.where == "movie" ? "movie" : "tv"}/$id?api_key=${dotenv.get('TMDB_KEY')}&language=fr-FR", 1);
-				showModalBottomSheet(
-					context: context,
-					isScrollControlled: true,
-					useSafeArea: true,
-					builder: (context) {
-						return ClipRRect(
-							borderRadius: const BorderRadius.only(
-								topLeft: Radius.circular(17.5),
-								topRight: Radius.circular(17.5)
-							),
-							child: MainContentPages(
-								serveurData: serverData,
-								bigData: bigData.first,
-								id: id,
-								movie: widget.where == "movie" ? true : false
-							),
-						);
-					}
+				List<Map<String, dynamic>> bigData = await TMDBService().fetchContent(
+					1,
+					"https://api.themoviedb.org/3/${widget.where == "movie" ? "movie" : "tv"}/$id?api_key=${dotenv.get('TMDB_KEY')}&language=fr-FR",
+					1
 				);
+				if (mounted) {
+					showCupertinoModalBottomSheet(
+						context: context,
+						expand: true,
+						useRootNavigator: true,
+						builder: (modalContext) => Scaffold(
+							backgroundColor: Colors.transparent,
+							body: SafeArea(
+								bottom: false,
+								child: Column(
+									children: [
+										Expanded(
+											child: MainContentPages(
+												serveurData: serverData,
+												bigData: bigData.first,
+												id: id,
+												movie: widget.where == "movie",
+												onClose: () => Navigator.pop(context),
+											),
+										),
+									],
+								),
+							),
+						),
+					);
+				}
 			},
 			onLongPressStart: (LongPressStartDetails details) {
 				HapticFeedback.heavyImpact();
@@ -94,7 +106,8 @@ class _DataviewState extends State<Dataview> {
 							func: () async {
 								serverData["id"] = id;
 								await NIGHTServices().deleteData(serverData);
-								mainKey.currentState!.dataStatusNotifier.value = await NIGHTServices().fetchDataStatus();
+								final newStatus = await NIGHTServices().fetchDataStatus();
+								mainKey.currentState!.dataStatusNotifier.value = newStatus;
 							}
 						)
 					],
@@ -159,7 +172,7 @@ class _DataviewState extends State<Dataview> {
 			});
 		}
 		return Wrap(
-			key: ValueKey(queryController.text),
+			key: ValueKey("${queryController.text}-${datas.hashCode}"),
 			spacing: 10,
 			runSpacing: 20,
 			alignment: WrapAlignment.start,

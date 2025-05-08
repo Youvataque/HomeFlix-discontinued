@@ -96,27 +96,27 @@ class _DownloadpagesState extends State<Downloadpages> with TickerProviderStateM
 								height: 1.5 * 70,
 								width: MediaQuery.sizeOf(context).width - 105,
 								child: Column(
-								mainAxisAlignment: MainAxisAlignment.end,
-								crossAxisAlignment: CrossAxisAlignment.start,
-								children: [
-									Text(
-										entry.value['name'].replaceAll(RegExp(r'[._\-]'), ' ').replaceAll(RegExp(r'\s+'), ' ').trim(),								
-										maxLines: 2,
-										style: sousText()
-									),
-									const Gap(10),
-									SizedBox(
-										height: 10,
-										width: 200,
-										child: LinearProgressIndicator(
-											value: entry.value['percent'] / 100,
-											borderRadius: BorderRadius.circular(3),
-											color: Theme.of(context).colorScheme.tertiary,
+									mainAxisAlignment: MainAxisAlignment.end,
+									crossAxisAlignment: CrossAxisAlignment.start,
+									children: [
+										Text(
+											entry.value['name'].replaceAll(RegExp(r'[._\-]'), ' ').replaceAll(RegExp(r'\s+'), ' ').trim(),								
+											maxLines: 2,
+											style: sousText()
 										),
-									),
-									const Gap(2)
-								],
-							),
+										const Gap(10),
+										SizedBox(
+											height: 10,
+											width: 200,
+											child: LinearProgressIndicator(
+												value: entry.value['percent'] / 100,
+												borderRadius: BorderRadius.circular(3),
+												color: Theme.of(context).colorScheme.tertiary,
+											),
+										),
+										const Gap(2)
+									],
+								),
 							)
 						],
 					),

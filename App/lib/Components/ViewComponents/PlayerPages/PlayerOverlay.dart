@@ -3,10 +3,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_vlc_player/flutter_vlc_player.dart';
 import 'package:gap/gap.dart';
 import 'package:homeflix/Components/Tools/FormatTool/MinToHour.dart';
+import 'package:homeflix/Components/ViewComponents/PlayerPages/VideoProxyServer.dart';
 
 class PlayerOverlay extends StatefulWidget {
 	final bool show;
 	final VlcPlayerController controller;
+	final VideoProxyServer videoProxy;
 	final Map<int, String> audioTracks;
 	final Map<int, String> subtitleTracks;
 	final Function(double) updateScale;
@@ -15,6 +17,7 @@ class PlayerOverlay extends StatefulWidget {
 		super.key,
 		required this.show,
 		required this.controller,
+		required this.videoProxy,
 		required this.audioTracks,
 		required this.subtitleTracks,
 		required this.updateScale,
@@ -61,6 +64,7 @@ class _PlayerOverlayState extends State<PlayerOverlay> {
 			await widget.controller.pause();
 		} else {
 			await widget.controller.play();
+			await widget.videoProxy.startProxy();
 		}
 	}
 

@@ -3,8 +3,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:gap/gap.dart';
 import 'package:homeflix/Components/ViewComponents/EpTemplate.dart';
 import 'package:homeflix/Components/ViewComponents/PlayerPages/VideoPlayer.dart';
+import 'package:homeflix/Components/ViewComponents/PlayerPages/VideoProxyServer.dart';
 import 'package:homeflix/Data/NightServices.dart';
-import 'package:homeflix/main.dart';
 
 ///////////////////////////////////////////////////////////////
 /// Template des pages de séries
@@ -16,7 +16,7 @@ class SeriesPages extends StatefulWidget {
 	final bool movie;
 	const SeriesPages({
 		super.key,
-    required this.id,
+    	required this.id,
 		required this.serveurData,
 		required this.bigData,
 		required this.seasContent,
@@ -30,6 +30,7 @@ class SeriesPages extends StatefulWidget {
 class _SeriesPagesState extends State<SeriesPages> {
 	int season = 1;
 	List<int> seasons = [];
+	VideoProxyServer videoProxy = VideoProxyServer();
 
 	@override
 	void initState() {
@@ -67,10 +68,14 @@ class _SeriesPagesState extends State<SeriesPages> {
 	/// bouton de sélection de saison
 	Widget seasonSelector() {
 		if (seasons.isEmpty) {
-			return SizedBox.shrink();
+			return const SizedBox.shrink();
 		}
 		if (!seasons.contains(season)) {
-			season = seasons.first;
+			WidgetsBinding.instance.addPostFrameCallback((_) {
+				setState(() {
+				season = seasons.first;
+				});
+			});
 		}
 		return Container(
 			height: 32,
@@ -123,6 +128,7 @@ class _SeriesPagesState extends State<SeriesPages> {
 	Widget printEp() {
 		final isComplete = widget.serveurData['seasons']['S$season']['complete'];
 		return Column(
+			key: ValueKey(season),
 			children: List.generate(
 				isComplete ?
 						widget.seasContent[season - 1]['episodes'].length
@@ -157,22 +163,23 @@ class _SeriesPagesState extends State<SeriesPages> {
 	/// lance la vidéo lors de l'appuie sur un épisode
 	void onEpTap(int index) async {
 		final path = await NIGHTServices().searchContent(
-      widget.id,
-      season,
-      index,
-      widget.movie
-    );
-    if (path == null) {
-      print("Path non trouvé, annulation.");
-      return;
-    }
+			widget.id,
+			season,
+			index,
+			widget.movie
+		);
+		if (path == null) {
+			print("Path non trouvé, annulation.");
+			return;
+		}
 		final encodedPath = Uri.encodeComponent(path);
 		final videoUrl = "http://${dotenv.get('NIGHTCENTER_IP')}:4000/api/streamVideo?path=$encodedPath";
-		final proxyUrl = await mainKey.currentState!.getProxyUrl(videoUrl);
+		await videoProxy.startProxy();
+		final proxyUrl = await videoProxy.getProxyUrl(videoUrl);
 		if (mounted) {
 			Navigator.push(
 					context,
-					MaterialPageRoute(builder: (context) => VlcVideoPlayer(videoUrl: proxyUrl))
+					MaterialPageRoute(builder: (context) => VlcVideoPlayer(videoUrl: proxyUrl, videoProxy: videoProxy,))
 			);
 		}
 	}

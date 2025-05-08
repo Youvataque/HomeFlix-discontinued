@@ -15,12 +15,14 @@ class MainContentPages extends StatefulWidget {
 	final Map<String, dynamic> bigData;
 	final String id;
 	final bool movie;
+	final VoidCallback onClose;
 	const MainContentPages({
 		super.key,
 		required this.serveurData,
 		required this.bigData,
 		required this.id,
-		required this.movie
+		required this.movie,
+		required this.onClose
 	});
 
 	@override
@@ -28,9 +30,14 @@ class MainContentPages extends StatefulWidget {
 }
 
 class _MainContentPagesState extends State<MainContentPages> {
-	List<Map<String, dynamic>> seasContent = [];	
+	List<Map<String, dynamic>> seasContent = [];
+	Future<void>? _fetchFuture;
 
-
+	@override
+	void initState() {
+		super.initState();
+		if (!widget.movie) _fetchFuture = fetchAll();
+	}
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////// zone des sous composants
 
@@ -47,7 +54,7 @@ class _MainContentPagesState extends State<MainContentPages> {
 			child: IconButton(
 				padding: EdgeInsets.zero,
 				iconSize: 20,
-				onPressed: () => Navigator.pop(context),
+				onPressed: () => widget.onClose(),
 				icon: Icon(
 					Icons.close,
 					color: Theme.of(context).colorScheme.secondary,
@@ -95,12 +102,12 @@ class _MainContentPagesState extends State<MainContentPages> {
 					children: [
 						Positioned.fill(
 							child: Transform.scale(
-									scale: 1,
-									child: Image.asset(
-										"src/images/contentBack.png",
-										fit: BoxFit.cover,
-									),
+								scale: 1,
+								child: Image.asset(
+									"src/images/contentBack.png",
+									fit: BoxFit.cover,
 								),
+							),
 						),
 						SingleChildScrollView(
 							child: Column(
@@ -283,19 +290,19 @@ class _MainContentPagesState extends State<MainContentPages> {
 	Widget dedicatedPages() {
 		return widget.movie ? 
 				MoviePages(
-          id: widget.id,
+          			id: widget.id,
 					serveurData: widget.serveurData,
 					movie: widget.movie,
 				)
 			: 
 				FutureBuilder(
-					future: fetchAll(),
+					future: _fetchFuture,
 					builder: (BuildContext context, AsyncSnapshot<void> snapshot) {
 						if (snapshot.connectionState == ConnectionState.waiting) {
 							return myIndicator(context, 10);
 						} else {
 							return SeriesPages(
-                id: widget.id,
+                				id: widget.id,
 								serveurData: widget.serveurData,
 								bigData: widget.bigData,
 								seasContent: seasContent,

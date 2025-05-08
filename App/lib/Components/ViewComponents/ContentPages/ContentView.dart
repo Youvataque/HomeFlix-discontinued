@@ -290,41 +290,41 @@ class _ContentviewState extends State<Contentview> {
 	}
 
 	///////////////////////////////////////////////////////////////
-	/// partie gérant l'affichage du YggGestionnary ou des messages de téléchargement
+	/// partie gérant l'affichage du DlGestionnary ou des messages de téléchargement
 	Widget downloadZone() {
 		return ValueListenableBuilder<Map<String, dynamic>>(
 			valueListenable: mainKey.currentState!.dataStatusNotifier,
 			builder: (context, dataStatus, child) {
 				return AnimatedCrossFade(
-						firstChild: Padding(
-								padding: const EdgeInsets.symmetric(horizontal: 10),
-								child: SourceGestionnary(
-									key: ValueKey(searchName),
-									originalName: originalName,
-									name: searchName,
-									selectData: widget.datas,
-									movie: widget.movie,
-									func: () {
-										Future.delayed(
-											const Duration(seconds: 2),
-											() => CupertinoActivityIndicator(
-												radius: 20,
-												color: Theme.of(context).colorScheme.secondary,
-											)
-										);
-										setState(() {});
-									}
-								),
+					firstChild: Padding(
+						padding: const EdgeInsets.symmetric(horizontal: 10),
+						child: SourceGestionnary(
+							key: ValueKey(searchName),
+							originalName: originalName,
+							name: searchName,
+							selectData: widget.datas,
+							movie: widget.movie,
+							func: () {
+								Future.delayed(
+									const Duration(seconds: 2),
+									() => CupertinoActivityIndicator(
+										radius: 20,
+										color: Theme.of(context).colorScheme.secondary,
+									)
+								);
+								setState(() {});
+							}
 						),
-						secondChild: AnimatedCrossFade(
-							duration: const Duration(milliseconds: 300),
-							firstChild: alreadyInDB("En cours de téléchargement ! C'est pour bientôt."),
-							secondChild: alreadyInDB("Contenue déjà téléchargé. Bon visionnage !"),
-							crossFadeState: dataStatus["queue"][widget.datas['id'].toString()] != null ? CrossFadeState.showFirst : CrossFadeState.showSecond,
-						),
-						crossFadeState: isDownload(dataStatus) ? CrossFadeState.showFirst : CrossFadeState.showSecond,
+					),
+					secondChild: AnimatedCrossFade(
 						duration: const Duration(milliseconds: 300),
-					);
+						firstChild: alreadyInDB("En cours de téléchargement ! C'est pour bientôt."),
+						secondChild: alreadyInDB("Contenue déjà téléchargé. Bon visionnage !"),
+						crossFadeState: dataStatus["queue"][widget.datas['id'].toString()] != null ? CrossFadeState.showFirst : CrossFadeState.showSecond,
+					),
+					crossFadeState: isDownload(dataStatus) ? CrossFadeState.showFirst : CrossFadeState.showSecond,
+					duration: const Duration(milliseconds: 300),
+				);
 			},
 		);
 	}

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:gap/gap.dart';
 import 'package:homeflix/Components/ViewComponents/PlayerPages/VideoPlayer.dart';
+import 'package:homeflix/Components/ViewComponents/PlayerPages/VideoProxyServer.dart';
 import 'package:homeflix/Data/NightServices.dart';
-import 'package:homeflix/main.dart';
 
 ///////////////////////////////////////////////////////////////
 /// template des pages de film
@@ -25,6 +25,7 @@ class MoviePages extends StatefulWidget {
 ///////////////////////////////////////////////////////////////
 /// corps du code
 class _MoviePagesState extends State<MoviePages> {
+	VideoProxyServer videoProxy = VideoProxyServer();
 
 	@override
 	Widget build(BuildContext context) {
@@ -34,30 +35,31 @@ class _MoviePagesState extends State<MoviePages> {
 			child: ElevatedButton(
 				onPressed: () async {
 					final path = await NIGHTServices().searchContent(
-							widget.id,
-              0,
-              0,
-              widget.movie
+						widget.id,
+						0,
+						0,
+						widget.movie
 					);
-          if (path == null) {
-            print("Path non trouvé, annulation.");
-            return;
-          }
+					if (path == null) {
+						print("Path non trouvé, annulation.");
+						return;
+					}
 					final encodedPath = Uri.encodeComponent(path);
 					final videoUrl = "http://${dotenv.get('NIGHTCENTER_IP')}:4000/api/streamVideo?path=$encodedPath";
+					await videoProxy.startProxy();
 					String proxyUrl = "";
-					proxyUrl = await mainKey.currentState!.getProxyUrl(videoUrl);
+					proxyUrl = await videoProxy.getProxyUrl(videoUrl);
 					Navigator.push(
-							context,
-							MaterialPageRoute(builder: (context) => VlcVideoPlayer(videoUrl: proxyUrl))
+						context,
+						MaterialPageRoute(builder: (context) => VlcVideoPlayer(videoUrl: proxyUrl, videoProxy: videoProxy))
 					);
 				},
 				style: ElevatedButton.styleFrom(
-						backgroundColor: Theme.of(context).colorScheme.secondary,
-						foregroundColor: Theme.of(context).scaffoldBackgroundColor,
-						shape: RoundedRectangleBorder(
-								borderRadius: BorderRadius.circular(5)
-						)
+					backgroundColor: Theme.of(context).colorScheme.secondary,
+					foregroundColor: Theme.of(context).scaffoldBackgroundColor,
+					shape: RoundedRectangleBorder(
+						borderRadius: BorderRadius.circular(5)
+					)
 				),
 				child: Row(
 					mainAxisAlignment: MainAxisAlignment.center,
@@ -72,9 +74,9 @@ class _MoviePagesState extends State<MoviePages> {
 						Text(
 							"Lecture",
 							style: TextStyle(
-									fontSize: 17,
-									fontWeight: FontWeight.w600,
-									color: Theme.of(context).scaffoldBackgroundColor
+								fontSize: 17,
+								fontWeight: FontWeight.w600,
+								color: Theme.of(context).scaffoldBackgroundColor
 							),
 						)
 					],

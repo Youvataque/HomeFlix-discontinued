@@ -2,13 +2,16 @@ import 'package:flutter/services.dart';
 import 'package:flutter_vlc_player/flutter_vlc_player.dart';
 import 'package:flutter/material.dart';
 import 'package:homeflix/Components/ViewComponents/PlayerPages/PlayerOverlay.dart';
+import 'package:homeflix/Components/ViewComponents/PlayerPages/VideoProxyServer.dart';
 
 class VlcVideoPlayer extends StatefulWidget {
 	final String videoUrl;
+	final VideoProxyServer videoProxy;
 
 	const VlcVideoPlayer({
 		super.key,
 		required this.videoUrl,
+		required this.videoProxy
 	});
 
 	@override
@@ -38,6 +41,7 @@ class _VlcVideoPlayerState extends State<VlcVideoPlayer> {
     Future.delayed(const Duration(seconds: 5), () {
       if (!_vlcPlayerController.value.isPlaying && mounted) {
         print("❌ Timeout: fermeture du lecteur");
+		widget.videoProxy.stopProxy();
         SystemChrome.setPreferredOrientations([
           DeviceOrientation.portraitUp,
           DeviceOrientation.portraitDown,
@@ -130,6 +134,7 @@ class _VlcVideoPlayerState extends State<VlcVideoPlayer> {
 						PlayerOverlay(
 							show: _show,
 							controller: _vlcPlayerController,
+							videoProxy: widget.videoProxy,
 							audioTracks: _audioTracks,
 							subtitleTracks: _subtitleTracks,
 							updateScale: (value) => setState(() {

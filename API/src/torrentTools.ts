@@ -1,4 +1,5 @@
 import chalk from "chalk";
+import fs from 'fs/promises';
 import { cleanName, extractInfo, writeTheTime } from "./tools.js";
 import { ContentDetails, MovieCheck, SearchResult, SerieCheck } from "./interfaces.js";
 import axios from "axios";
@@ -134,49 +135,39 @@ export async function getContentDetails(hash: string): Promise<ContentDetails> {
 
 /////////////////////////////////////////////////////////////////////////////////
 // fonction pour supprimer un torrent
-export async function deleteOneTorrent(torrentHash: string): Promise<boolean> {
+export async function deleteOneTorrent(path: string): Promise<boolean> {
 	try {
-		if (torrentHash != "") {
-			writeTheTime(chalk.yellow(`Trying to delete torrent with hash: ${torrentHash}`));
-			await qbittorrentAPI.post('/torrents/delete',
-				new URLSearchParams({
-				  hashes: torrentHash,
-				  deleteFiles: "true"
-				}),
-				{
-				  headers: {
-					'Content-Type': 'application/x-www-form-urlencoded'
-				  }
-				}
-			  );
-			writeTheTime(chalk.green(`${torrentHash} has been deleted with success.`));
-			return true;
-		}  else {
-			writeTheTime(chalk.red('No torrent has been found!'));
+		if (!path) {
+			writeTheTime(chalk.red("No path provided!"));
 			return false;
 		}
-	} catch (error) {
-		writeTheTime(chalk.red(`Error during deleting: ${error}`));
+		await fs.access(path);
+		writeTheTime(chalk.yellow(`Trying to delete torrent with path: ${path}`));
+		await fs.unlink(path);
+		writeTheTime(chalk.green(`${path} has been deleted successfully.`));
+		return true;
+	} catch (error: any) {
+		if (error.code === 'ENOENT') {
+			writeTheTime(chalk.red(`File does not exist: ${path}`));
+		} else {
+			writeTheTime(chalk.red(`Error while deleting ${path}: ${error.message || error}`));
+		}
 		return false;
 	}
 }
 
 /////////////////////////////////////////////////////////////////////////////////
 // fonction pour supprimer chaques torrent d'une série
-export async function deleteAllTorrent(newData: any) : Promise<boolean>{
+export async function deleteAllTorrent(newData: any): Promise<boolean> {
 	try {
 		const seasons = newData['seasons'];
-		for (const key in seasons) {
-			if (seasons[key]["episode"].length == 1) {
-				const datas = await searchTorrent(seasons[key]["title"]);
-				await deleteOneTorrent(datas.hash);
-			} else {
-				if (seasons[key]["episode"].length > 1) {
-					const titles = seasons[key]["titles"];
-					for (let x = 0; x < titles.length; x++) {
-						const datas = await searchTorrent(titles[x]);
-						await deleteOneTorrent(datas.hash);
-					}
+
+		for (const seasonKey in seasons) {
+			const season = seasons[seasonKey];
+			for (let i = 0; i < season['size']; i++) {
+				const success = await deleteOneTorrent(season['paths'][i]);
+				if (!success) {
+					writeTheTime(chalk.red(`Failed to delete: ${season['paths'][i]}`));
 				}
 			}
 		}
