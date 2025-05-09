@@ -11,25 +11,27 @@ import 'package:readmore/readmore.dart';
 ///////////////////////////////////////////////////////////////
 /// widget de présentation de chaques oeuvres téléchargés
 class MainContentPages extends StatefulWidget {
-	final Map<String, dynamic> serveurData;
-	final Map<String, dynamic> bigData;
-	final String id;
-	final bool movie;
-	const MainContentPages({
-		super.key,
-		required this.serveurData,
-		required this.bigData,
-		required this.id,
-		required this.movie
-	});
+  final Map<String, dynamic> serveurData;
+  final Map<String, dynamic> bigData;
+  final String id;
+  final bool movie;
+  final VoidCallback onClose;
+  const MainContentPages({
+    super.key,
+    required this.serveurData,
+    required this.bigData,
+    required this.id,
+    required this.movie,
+    required this.onClose
+  });
 
-	@override
-	State<MainContentPages> createState() => _MainContentPagesState();
+  @override
+  State<MainContentPages> createState() => _MainContentPagesState();
 }
 
 class _MainContentPagesState extends State<MainContentPages> {
 	List<Map<String, dynamic>> seasContent = [];	
-
+  Future<void>? _fetchFuture;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////// zone des sous composants
@@ -81,6 +83,12 @@ class _MainContentPagesState extends State<MainContentPages> {
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////// zone des composants
+
+@override
+	void initState() {
+		super.initState();
+		if (!widget.movie) _fetchFuture = fetchAll();
+	}
 
 //////////////////////////////////////////////////////////////////
 /// corp du code
@@ -289,7 +297,7 @@ class _MainContentPagesState extends State<MainContentPages> {
 				)
 			: 
 				FutureBuilder(
-					future: fetchAll(),
+					future: _fetchFuture,
 					builder: (BuildContext context, AsyncSnapshot<void> snapshot) {
 						if (snapshot.connectionState == ConnectionState.waiting) {
 							return myIndicator(context, 10);

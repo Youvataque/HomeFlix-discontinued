@@ -78,8 +78,7 @@ router.post('/contentErase', apiKeyMiddleware, async (req: Request, res: Respons
 	let del = false;
 	db.read();
 	if (newData['media']) {
-		const datas = await searchTorrent(newData["name"]);
-		del = await deleteOneTorrent(datas.hash);
+		del = await deleteOneTorrent(newData['path']);
 	} else {
 		del = await deleteAllTorrent(newData);
 	}

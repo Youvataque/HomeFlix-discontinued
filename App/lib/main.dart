@@ -38,14 +38,6 @@ class MainState extends State<Main> {
 	bool connectEtablished = false;
 
 	@override
-	void initState() {
-		super.initState();
-		if (connectEtablished) {
-			_startPeriodicFetch();
-		}
-	}
-
-	@override
 	void dispose() {
 		_timer?.cancel();
 		dataStatusNotifier.dispose();
@@ -77,6 +69,9 @@ class MainState extends State<Main> {
 					return myIndicator(context, 20);
 				} else if (snapshot.connectionState == ConnectionState.done) {
 					if (snapshot.data == true) {
+            if (connectEtablished) {
+              _startPeriodicFetch();
+            }
 						return const MyTabbar();
 					} else {
 						return const Settings(leftWord: null);

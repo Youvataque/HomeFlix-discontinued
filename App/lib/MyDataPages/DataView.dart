@@ -11,6 +11,7 @@ import 'package:homeflix/Data/NightServices.dart';
 import 'package:homeflix/Data/TmdbServices.dart';
 import 'package:homeflix/MyDataPages/MainContentPages.dart';
 import 'package:homeflix/main.dart';
+import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 
 class Dataview extends StatefulWidget {
 	final String secTitle;
@@ -49,58 +50,69 @@ class _DataviewState extends State<Dataview> {
 	/// Ui du bouton image 
 	Widget imgButton(Widget img, Map<String, dynamic> serverData, String id) {
 		return GestureDetector(
-				onTap: () async {
-					List<Map<String, dynamic>> bigData = await TMDBService().fetchContent(1, "https://api.themoviedb.org/3/${widget.where == "movie" ? "movie" : "tv"}/$id?api_key=${dotenv.get('TMDB_KEY')}&language=fr-FR", 1);
-					showModalBottomSheet(
-							context: context,
-							isScrollControlled: true,
-							useSafeArea: true,
-							builder: (context) {
-								return ClipRRect(
-									borderRadius: const BorderRadius.only(
-											topLeft: Radius.circular(17.5),
-											topRight: Radius.circular(17.5)
-									),
-									child: MainContentPages(
-											serveurData: serverData,
-											bigData: bigData.first,
-											id: id,
-											movie: widget.where == "movie" ? true : false
-									),
-								);
-							}
-					);
-				},
-				onLongPressStart: (LongPressStartDetails details) {
-					HapticFeedback.heavyImpact();
-					final Offset tapPosition = details.globalPosition;
-					showMenu(
+			onTap: () async {
+				List<Map<String, dynamic>> bigData = await TMDBService().fetchContent(
+					1,
+					"https://api.themoviedb.org/3/${widget.where == "movie" ? "movie" : "tv"}/$id?api_key=${dotenv.get('TMDB_KEY')}&language=fr-FR",
+					1
+				);
+				if (mounted) {
+					showCupertinoModalBottomSheet(
 						context: context,
-						color: Theme.of(context).primaryColor,
-						shape: RoundedRectangleBorder(
-								borderRadius: BorderRadius.circular(7.5)
+						expand: true,
+						useRootNavigator: true,
+						builder: (modalContext) => Scaffold(
+							backgroundColor: Colors.transparent,
+							body: SafeArea(
+								bottom: false,
+								child: Column(
+									children: [
+										Expanded(
+											child: MainContentPages(
+												serveurData: serverData,
+												bigData: bigData.first,
+												id: id,
+												movie: widget.where == "movie",
+												onClose: () => Navigator.pop(context),
+											),
+										),
+									],
+								),
+							),
 						),
-						position: RelativeRect.fromLTRB(
-							tapPosition.dx,
-							tapPosition.dy,
-							tapPosition.dx + 1,
-							tapPosition.dy + 1,
-						),
-						items: [
-							Menueitem(
-									title: "Supprimer",
-									icon: CupertinoIcons.trash,
-									color: Theme.of(context).colorScheme.tertiary,
-									func: () async {
-										serverData["id"] = id;
-										await NIGHTServices().deleteData(serverData);
-										mainKey.currentState!.dataStatusNotifier.value = await NIGHTServices().fetchDataStatus();
-									}
-							)
-						],
 					);
-				},
-				child: img
+				}
+			},
+			onLongPressStart: (LongPressStartDetails details) {
+				HapticFeedback.heavyImpact();
+				final Offset tapPosition = details.globalPosition;
+				showMenu(
+					context: context,
+					color: Theme.of(context).primaryColor,
+					shape: RoundedRectangleBorder(
+							borderRadius: BorderRadius.circular(7.5)
+					),
+					position: RelativeRect.fromLTRB(
+						tapPosition.dx,
+						tapPosition.dy,
+						tapPosition.dx + 1,
+						tapPosition.dy + 1,
+					),
+					items: [
+						Menueitem(
+								title: "Supprimer",
+								icon: CupertinoIcons.trash,
+								color: Theme.of(context).colorScheme.tertiary,
+								func: () async {
+									serverData["id"] = id;
+									await NIGHTServices().deleteData(serverData);
+									mainKey.currentState!.dataStatusNotifier.value = await NIGHTServices().fetchDataStatus();
+								}
+						)
+					],
+				);
+			},
+			child: img
 		);
 	}
 

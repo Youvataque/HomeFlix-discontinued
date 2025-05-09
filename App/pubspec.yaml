@@ -45,6 +45,7 @@ dependencies:
   flutter_vlc_player: ^7.4.2
   package_info_plus: ^8.3.0
   shared_preferences: ^2.5.3
+  modal_bottom_sheet: ^3.0.0
 flutter_launcher_icons:
   android: true
   ios: true
