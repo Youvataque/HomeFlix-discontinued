@@ -164,7 +164,9 @@ export async function deleteAllTorrent(newData: any): Promise<boolean> {
 
 		for (const seasonKey in seasons) {
 			const season = seasons[seasonKey];
+			writeTheTime(chalk.yellow(`Trying to del : ${seasonKey}`))
 			for (let i = 0; i < season['size']; i++) {
+				writeTheTime(chalk.yellow(`Trying to del : ${season['paths'][i]}`))
 				const success = await deleteOneTorrent(season['paths'][i]);
 				if (!success) {
 					writeTheTime(chalk.red(`Failed to delete: ${season['paths'][i]}`));
