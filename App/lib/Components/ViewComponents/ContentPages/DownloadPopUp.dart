@@ -391,6 +391,7 @@ class _DownloadPopUpState extends State<DownloadPopUp> {
 					"complete" : widget.seasons[x - 1]['episode_count'] == datas.episode,
 					"episode" : [...toAdd, datas.episode],
 					"titles" : [...titles, widget.title],
+					"size": widget.seasons[x - 1]['episode_count'],
 					"title" : widget.title,
 				};
 			} else if (serverCheck) {
