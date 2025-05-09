@@ -63,7 +63,7 @@ Cette API est conçue pour récupérer et formater les informations issues de la
 
 - C'est pret !
 
-### VPN (Niveau plus avancé mais optionnel)
+### VPN (Niveau plus avancé mais optionnel) Icompatible pour le moment avec l'installation docker !!
 
 - Pour se connecter au docker il faut faire : ssh root@votre_ip -p 2222 (le mot de passe est "root").
 
