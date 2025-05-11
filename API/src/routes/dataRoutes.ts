@@ -51,6 +51,11 @@ router.post('/contentStatus', authMiddleware, async (req: Request, res: Response
 			return res.status(400).json({ error: "L'élément doit avoir un ID" });
 		}
 
+		const uid = req.user?.uid;
+		if (!uid) {
+			return res.status(401).json({ error: 'Utilisateur non identifié' });
+		}
+
 		db.read();
 		db.data[where as keyof DataStructure][newData.id] = {
 			"title": newData["title"],
@@ -60,11 +65,13 @@ router.post('/contentStatus', authMiddleware, async (req: Request, res: Response
 			"percent": newData["percent"],
 			"path": "",
 			"date": getActualTime(),
-			"seasons": newData["seasons"]
+			"seasons": newData["seasons"],
+			"user": uid,
 		};
 		db.write();
+
 		res.status(201).json({ message: 'Données ajoutées avec succès' });
-		writeTheTime(chalk.green(`Données ajoutées avec succès à la DB.`));
+		writeTheTime(chalk.green(`Données ajoutées à la DB pour l'utilisateur ${uid}.`));
 	} catch (err) {
 		writeTheTime(chalk.red(`Erreur dans /contentStatus: ${err}`));
 		res.status(500).json({ error: 'Erreur interne du serveur' });

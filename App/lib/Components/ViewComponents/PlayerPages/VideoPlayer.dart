@@ -34,7 +34,7 @@ class _VlcVideoPlayerState extends State<VlcVideoPlayer> {
 			DeviceOrientation.landscapeLeft,
 			DeviceOrientation.landscapeRight,
 		]);
-    closeIfError();
+   		closeIfError();
 	}
 
   void  closeIfError() {
