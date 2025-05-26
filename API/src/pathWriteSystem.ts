@@ -18,8 +18,8 @@ export async function pathOrPaths(datas: Record<string, any>, name: string, orig
 		if (item['complete'] && ep[0] === -1) {
 			for (let x = 0; x < size; x++) {
 				if (!item['paths'][x] || item['paths'][x].trim() === "") {
-					const nName = name + " " + formatSeasCode(key) + formatEpCode(x + 1);
-					const nOname = originalName + " " + formatSeasCode(key) + formatEpCode(x + 1);
+					const nName = name + " " + formatEpCode(x + 1);
+					const nOname = originalName + " " + formatEpCode(x + 1);
 					item['paths'][x] = await createAbsPath(nName, nOname, false);
 				}
 			}

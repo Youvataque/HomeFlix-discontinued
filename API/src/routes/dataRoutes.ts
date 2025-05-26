@@ -3,7 +3,7 @@ import fs from 'fs';
 import dotenv from 'dotenv';
 import { db, getActualTime, getMimeType, specDb, writeTheTime } from "../tools.js";
 import authMiddleware from './authMiddleware.js';
-import { DataStructure, SearchInfos } from '../interfaces.js';
+import { DataStructure, manualDatas, SearchInfos } from '../interfaces.js';
 import chalk from 'chalk';
 import { createAbsPath, getContentPath } from '../pathSystem.js';
 import { deleteAllTorrent, deleteOneTorrent, searchTorrent } from '../torrentTools.js';
@@ -95,13 +95,23 @@ router.post('/contentErase', authMiddleware, async (req: Request, res: Response)
 /////////////////////////////////////////////////////////////////////////////////
 // Route pour rechercher la localisation d'un contenu
 router.post('/manualUpdate', async (req: Request, res: Response) => {
-	const {id, movie} = req.body;
+	const body = req.body as manualDatas;
+	const { id, movie } = body;	
 	try {
 		db.read();
 		const data = db.data;
-		for (const key in movie as boolean ? data.movie : data.tv) {
-			if (id as string == key) {
-				movie as boolean ? data.movie[key] : data.tv[key] = await writeGoodPath(movie as boolean ? data.movie[key] : data.tv[key]);
+		for (const key in movie ? data.movie : data.tv) {
+			if (id == key) {
+				if (movie) {
+					data.movie[key]['path'] = "";
+					data.movie[key] = await writeGoodPath(data.movie[key]);
+				} else {
+					for (const season in data.tv[key]['seasons']) {
+						data.tv[key]['seasons'][season]['paths'] = {};
+					}
+					data.tv[key] = await writeGoodPath(data.tv[key]);
+					console.log(data.tv[key]['paths']);
+				}
 				break ;
 			}
 		}

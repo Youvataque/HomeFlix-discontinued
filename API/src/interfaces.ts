@@ -122,10 +122,16 @@ export interface ContentDetails {
 
 /////////////////////////////////////////////////////////////////////////////////
 // interface pathSystem
-
 export interface SearchInfos {
 	season: number;
 	episode: number;
 	id: string;
 	movie: boolean;
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+// interface routes
+export interface manualDatas {
+	id: string,
+	movie: boolean
 }
