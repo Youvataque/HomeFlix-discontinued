@@ -97,11 +97,13 @@ router.post('/contentErase', authMiddleware, async (req: Request, res: Response)
 router.post('/manualUpdate', async (req: Request, res: Response) => {
 	const body = req.body as manualDatas;
 	const { id, movie } = body;	
+	let found: boolean = false;
 	try {
 		db.read();
 		const data = db.data;
 		for (const key in movie ? data.movie : data.tv) {
 			if (id == key) {
+				found = true;
 				if (movie) {
 					data.movie[key]['path'] = "";
 					data.movie[key] = await writeGoodPath(data.movie[key]);
@@ -117,8 +119,13 @@ router.post('/manualUpdate', async (req: Request, res: Response) => {
 		}
 		db.data = data;
 		db.write();
-		writeTheTime(chalk.green("Mise à jour manuelle terminé."))
-		return res.status(201).json({message : "Mise à jour manuelle terminé."})
+		if (!found) {
+			writeTheTime(chalk.red("Mise à jour manuelle impossible, le contenue n'existe pas !"))
+			return res.status(201).json({message : "Mise à jour manuelle impossible, le contenue n'existe pas !"})
+		} {
+			writeTheTime(chalk.green("Mise à jour manuelle terminé."))
+			return res.status(201).json({message : "Mise à jour manuelle terminé."})
+		}
 	} catch (error) {
 		writeTheTime(chalk.red(`Erreur lors de la recherche du contenu : ${error}`));
 		res.status(500).json({ error: 'Une erreur est survenue lors de la recherche du contenu.' });

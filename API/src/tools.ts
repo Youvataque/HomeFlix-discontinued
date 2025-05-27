@@ -190,3 +190,25 @@ export function formatSeasCode(code: string): string {
 export function formatEpCode(num: number): string {
     return `e${num.toString().padStart(2, '0')}`;
 }
+
+/////////////////////////////////////////////////////////////////////////////////
+// clean a string that contains duplicate word "andor s01 s01 e02" -> "andor s01 e02"
+export function cleanDuplicateWords(title: string): string {
+	const splitted = title.trim().split(/\s+/);
+	const result: string[] = [];
+
+	for (const word of splitted) {
+		const lowerWord = word.toLowerCase();
+		if (!result.some(w => w.toLowerCase().includes(lowerWord) && w.toLowerCase() !== lowerWord)) {
+			for (let i = result.length - 1; i >= 0; i--) {
+				const w = result[i].toLowerCase();
+				if (lowerWord.includes(w) && w !== lowerWord) {
+					result.splice(i, 1);
+				}
+			}
+			result.push(word);
+		}
+	}
+
+	return result.join(" ");
+}
