@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -13,7 +14,16 @@ import 'package:homeflix/Data/NightServices.dart';
 import 'package:homeflix/Data/TmdbServices.dart';
 import 'firebase_options.dart';
 
+
 GlobalKey<MainState> mainKey = GlobalKey<MainState>();
+
+class MyHttpOverrides extends HttpOverrides {
+  @override
+  HttpClient createHttpClient(SecurityContext? context) {
+    return super.createHttpClient(context)
+      ..badCertificateCallback = (cert, host, port) => true;
+  }
+}
 
 void main() async {
 	WidgetsFlutterBinding.ensureInitialized();
@@ -25,7 +35,8 @@ void main() async {
 		DeviceOrientation.portraitUp,
 		DeviceOrientation.portraitDown,
 	]);
-	runApp(Main(key: mainKey));
+    HttpOverrides.global = MyHttpOverrides();
+   runApp(Main(key: mainKey));
 }
 
 class Main extends StatefulWidget {
