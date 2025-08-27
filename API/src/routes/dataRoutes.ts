@@ -177,6 +177,10 @@ router.get('/streamVideo', authMiddleware, (req, res) => {
 			writeTheTime(`Erreur lors de l'accès au fichier : ${err.message}`);
 			return res.status(404).json({ message: 'Fichier non trouvé.' });
 		}
+		 if (!stats.isFile()) {
+			writeTheTime(`Chemin non fichier (dir ?) : ${videoPath}`);
+			return res.status(400).json({ message: 'Le chemin ne pointe pas vers un fichier.' });
+		}
 		const fileSize = stats.size;
 		const range = req.headers.range;
 		if (!range) {
