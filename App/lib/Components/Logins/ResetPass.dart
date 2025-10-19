@@ -2,11 +2,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:homeflix/Components/Logins/LogMainBod.dart';
+import 'package:homeflix/Components/ViewComponents/LitleComponent.dart';
 import '../Tools/ErrorTools/LoginsError.dart';
 import '../ViewComponents/Buttons/MainButton.dart';
 import '../ViewComponents/Buttons/MyTextButton.dart';
 import '../ViewComponents/Buttons/MyTextField.dart';
-import '../ViewComponents/ErrorView.dart';
 
 class ResetPass extends StatefulWidget {
   const ResetPass({super.key});
@@ -17,20 +17,10 @@ class ResetPass extends StatefulWidget {
 
 class _ResetPassState extends State<ResetPass> {
   TextEditingController email = TextEditingController();
-  String theError = "";
   @override
   Widget build(BuildContext context) {
     return LogMainBod(
-      child: Column(
-        children: [
-          ErrorView(
-              key: UniqueKey(),
-              error: theError
-          ),
-          const Gap(5),
-          loginComponent()
-        ]
-      ),
+      child: loginComponent(),
     );
   }
 
@@ -76,23 +66,21 @@ class _ResetPassState extends State<ResetPass> {
 
 ///////////////////////////////////////////////////////////////
 /// logique de récupération
-  void resetPass() async {
-    String selectedEmail = email.text.trim();
-    try {
-      if (selectedEmail == "") {
-        setState(() {
-          theError = "Il est nécéssaire de renseigner un email !";
-        });
-      } else {
-        await FirebaseAuth.instance.sendPasswordResetEmail(email: selectedEmail);
-        setState(() {
-          theError = "Si un compte est reconnu vous recevrez un email prochainement.";
-        });
-      }
-    } catch(error) {
-      setState(() {
-        theError = loginsError(error.toString());
-      });
-    }
-  }
+	void resetPass() async {
+		String selectedEmail = email.text.trim();
+		try {
+			if (selectedEmail == "") {
+				infoDialog(context, "Il est nécéssaire de renseigner un email !", true);
+			} else {
+				await FirebaseAuth.instance.sendPasswordResetEmail(email: selectedEmail);
+				if (mounted) {
+					infoDialog(context, "Si un compte est reconnu vous recevrez un email prochainement.", false);
+				}
+			}
+		} catch(error) {
+			if (mounted) {
+				infoDialog(context, loginsError(error.toString()), true);
+			}
+		}
+	}
 }

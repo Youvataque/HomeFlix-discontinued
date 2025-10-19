@@ -11,18 +11,18 @@ class Eptemplate extends StatefulWidget {
 	final int index;
 	final int time;
 	final String title;
-	final String imgPath;
+	final String? imgPath;
 	final String id;
-	final String overview;
+	final String? overview;
 	final VoidCallback onTap;
 	const Eptemplate({
 		super.key,
 		required this.index,
 		required this.time,
 		required this.title,
-		required this.imgPath,
+		this.imgPath,
 		required this.id,
-		required this.overview,
+		this.overview,
 		required this.onTap
 	});
 
@@ -92,9 +92,12 @@ class _EptemplateState extends State<Eptemplate> {
 
 	///////////////////////////////////////////////////////////////
 	/// partie contenant le résumé
-	Text overviPart() {
+	Widget overviPart() {
+		if (widget.overview == null || widget.overview!.isEmpty) {
+			return const SizedBox.shrink();
+		}
 		return Text(
-			widget.overview,
+			widget.overview!,
 			maxLines: 4,
 			overflow: TextOverflow.ellipsis,
 			style: TextStyle(
@@ -108,8 +111,19 @@ class _EptemplateState extends State<Eptemplate> {
 	///////////////////////////////////////////////////////////////
 	/// création de l'image de l'épisode
 	Widget createEpImg() {
+		if (widget.imgPath == null) {
+			return Container(
+				width: MediaQuery.sizeOf(context).width / 3,
+				height: (MediaQuery.sizeOf(context).width / 3) * 9 / 16,
+				decoration: BoxDecoration(
+					color: Colors.grey[800],
+					borderRadius: BorderRadius.circular(10),
+				),
+				child: const Center(child: Icon(Icons.image_not_supported)),
+			);
+		}
 		return FutureBuilder<File?>(
-			future: TMDBService().getImgWithPath(widget.imgPath, widget.id),
+			future: TMDBService().getImgWithPath(widget.imgPath!, widget.id),
 			builder: (BuildContext context, AsyncSnapshot<File?> snapshot) {
 				if (snapshot.connectionState == ConnectionState.waiting) {
 					return myIndicator(context, 10);
@@ -131,11 +145,14 @@ class _EptemplateState extends State<Eptemplate> {
 						),
 					);
 				} else {
-					return const Center(
-						child: Text(
-						'Image non disponible',
-						style: TextStyle(color: Colors.grey),
+					return Container(
+						width: MediaQuery.sizeOf(context).width / 3,
+						height: (MediaQuery.sizeOf(context).width / 3) * 9 / 16,
+						decoration: BoxDecoration(
+							color: Colors.grey[800],
+							borderRadius: BorderRadius.circular(10),
 						),
+						child: const Center(child: Icon(Icons.image_not_supported)),
 					);
 				}
 			},

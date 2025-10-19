@@ -12,6 +12,7 @@ import 'package:homeflix/Components/Tools/Theme/ColorsTheme.dart';
 import 'package:homeflix/Components/ViewComponents/LitleComponent.dart';
 import 'package:homeflix/Data/NightServices.dart';
 import 'package:homeflix/Data/TmdbServices.dart';
+import 'package:media_kit/media_kit.dart';
 import 'firebase_options.dart';
 
 
@@ -27,6 +28,7 @@ class MyHttpOverrides extends HttpOverrides {
 
 void main() async {
 	WidgetsFlutterBinding.ensureInitialized();
+	MediaKit.ensureInitialized();
 	await Firebase.initializeApp(
 		options: DefaultFirebaseOptions.currentPlatform,
 	);

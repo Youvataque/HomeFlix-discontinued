@@ -1,16 +1,15 @@
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:homeflix/Components/Logins/LogMainBod.dart';
 import 'package:homeflix/Components/Logins/ResetPass.dart';
+import 'package:homeflix/Components/ViewComponents/LitleComponent.dart';
 
 import '../../main.dart';
 import '../Tools/ErrorTools/LoginsError.dart';
 import '../ViewComponents/Buttons/MainButton.dart';
 import '../ViewComponents/Buttons/MyTextButton.dart';
 import '../ViewComponents/Buttons/MyTextField.dart';
-import '../ViewComponents/ErrorView.dart';
 
 ///////////////////////////////////////////////////////////////
 /// Page de connexion
@@ -26,20 +25,10 @@ class Login extends StatefulWidget {
 class _LoginState extends State<Login> {
   TextEditingController email = TextEditingController();
   TextEditingController password = TextEditingController();
-  String theError = "";
   @override
   Widget build(BuildContext context) {
     return LogMainBod(
-      child: Column(
-        children: [
-          ErrorView(
-              key: UniqueKey(),
-              error: theError
-          ),
-          const Gap(5),
-          loginComponent()
-        ],
-      ),
+      child: loginComponent(),
     );
   }
 
@@ -108,21 +97,20 @@ class _LoginState extends State<Login> {
 /// logique de connexion
   void login() async {
     try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-          email: email.text.trim(),
-          password: password.text.trim()
-      );
-      if (mounted) {
-        Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const Main())
-        );
-      }
-    } catch (error) {
-      print(error);
-      setState(() {
-        theError = loginsError(error.toString());
-      });
-    }
+		await FirebaseAuth.instance.signInWithEmailAndPassword(
+			email: email.text.trim(),
+			password: password.text.trim()
+		);
+		if (mounted) {
+			Navigator.pushReplacement(
+				context,
+				MaterialPageRoute(builder: (context) => const Main())
+			);
+		}
+		} catch (error) {
+			if (mounted) {
+				infoDialog(context, loginsError(error.toString()), true);
+			}
+		}
   }
 }

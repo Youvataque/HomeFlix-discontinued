@@ -1,25 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_vlc_player/flutter_vlc_player.dart';
 import 'package:gap/gap.dart';
 import 'package:homeflix/Components/Tools/FormatTool/MinToHour.dart';
 import 'package:homeflix/Components/ViewComponents/PlayerPages/VideoProxyServer.dart';
+import 'package:media_kit/media_kit.dart';
 
 class PlayerOverlay extends StatefulWidget {
 	final bool show;
-	final VlcPlayerController controller;
+	final Player player;
 	final VideoProxyServer videoProxy;
-	final Map<int, String> audioTracks;
-	final Map<int, String> subtitleTracks;
 	final Function(double) updateScale;
 
 	const PlayerOverlay({
 		super.key,
 		required this.show,
-		required this.controller,
+		required this.player,
 		required this.videoProxy,
-		required this.audioTracks,
-		required this.subtitleTracks,
 		required this.updateScale,
 	});
 
@@ -28,12 +24,13 @@ class PlayerOverlay extends StatefulWidget {
 }
 
 class _PlayerOverlayState extends State<PlayerOverlay> {
-	bool isPlaying = true;
-	double volume = 1;
-	Duration currentPosition = Duration.zero;
-	Duration totalDuration = Duration.zero;
-	int selectedAudioTrack = 0;
-	int selectedSubtitleTrack = -1;
+	late bool isPlaying = widget.player.state.playing;
+	late Duration position = widget.player.state.position;
+	late Duration duration = widget.player.state.duration;
+	late List<AudioTrack> audioTracks = widget.player.state.tracks.audio;
+	late AudioTrack activeAudioTrack = widget.player.state.track.audio;
+	late List<SubtitleTrack> subtitleTracks = widget.player.state.tracks.subtitle;
+	late SubtitleTrack activeSubtitleTrack = widget.player.state.track.subtitle;
 	double scaleValue = 1.0;
 
 	@override
@@ -44,42 +41,42 @@ class _PlayerOverlayState extends State<PlayerOverlay> {
 			statusBarColor: Colors.black,
 			systemNavigationBarColor: Colors.black,
 		));
-		_initializeListener();
-	}
-
-	void _initializeListener() {
-		widget.controller.addListener(() {
-			setState(() {
-				isPlaying = widget.controller.value.isPlaying;
-				currentPosition = widget.controller.value.position;
-				totalDuration = widget.controller.value.duration;
-				selectedSubtitleTrack = widget.controller.value.activeSpuTrack;
-				selectedAudioTrack = widget.controller.value.activeAudioTrack;
-			});
+		widget.player.stream.playing.listen((event) {
+			if (mounted) setState(() => isPlaying = event);
+		});
+		widget.player.stream.position.listen((event) {
+			if (mounted) setState(() => position = event);
+		});
+		widget.player.stream.duration.listen((event) {
+			if (mounted) setState(() => duration = event);
+		});
+		widget.player.stream.tracks.listen((event) {
+			if (mounted) {
+				setState(() {
+					audioTracks = event.audio;
+					subtitleTracks = event.subtitle;
+				});
+			}
+		});
+		widget.player.stream.track.listen((event) {
+			if (mounted) {
+				setState(() {
+					activeAudioTrack = event.audio;
+					activeSubtitleTrack = event.subtitle;
+				});
+			}
 		});
 	}
 
-	void _togglePlayPause() async {
-		if (isPlaying) {
-			await widget.controller.pause();
-		} else {
-			await widget.controller.play();
-			await widget.videoProxy.startProxy();
-		}
-	}
-
-	void _changeVolume(double newVolume) {
-		setState(() {
-			volume = newVolume;
-			widget.controller.setVolume((volume * 100).toInt());
-		});
+	void _togglePlayPause() {
+		widget.player.playOrPause();
 	}
 
 	void _seek(bool forward) {
 		final newPosition = forward
-				? currentPosition + const Duration(seconds: 10)
-				: currentPosition - const Duration(seconds: 10);
-		widget.controller.seekTo(newPosition);
+				? position + const Duration(seconds: 10)
+				: position - const Duration(seconds: 10);
+		widget.player.seek(newPosition);
 	}
 
 	void _adjustScale(double delta) {
@@ -117,7 +114,7 @@ class _PlayerOverlayState extends State<PlayerOverlay> {
 			child: Row(
 				children: [
 					IconButton(
-						icon: const Icon(Icons.close, color: Colors.white),
+						icon: Icon(Icons.close, color: Theme.of(context).colorScheme.secondary),
 						onPressed: () {
 							SystemChrome.setPreferredOrientations([
 								DeviceOrientation.portraitUp,
@@ -128,15 +125,15 @@ class _PlayerOverlayState extends State<PlayerOverlay> {
 					),
 					const Gap(10),
 					IconButton(
-						icon: const Icon(Icons.remove, color: Colors.white),
+						icon: Icon(Icons.remove, color: Theme.of(context).colorScheme.secondary),
 						onPressed: () => _adjustScale(-0.1),
 					),
-					const Text(
+					Text(
 						"Zoom",
-						style: const TextStyle(color: Colors.white, fontSize: 16),
+						style: TextStyle(color: Theme.of(context).colorScheme.secondary, fontSize: 16),
 					),
 					IconButton(
-						icon: const Icon(Icons.add, color: Colors.white),
+						icon: Icon(Icons.add, color: Theme.of(context).colorScheme.secondary),
 						onPressed: () => _adjustScale(0.1),
 					),
 				],
@@ -150,13 +147,13 @@ class _PlayerOverlayState extends State<PlayerOverlay> {
 			right: 40,
 			child: Row(
 				children: [
-					const Icon(Icons.volume_up, color: Colors.white),
+					Icon(Icons.volume_up, color: Theme.of(context).colorScheme.secondary),
 					Slider(
-						value: volume,
+						value: widget.player.state.volume / 100,
 						min: 0.0,
 						max: 1.0,
-						onChanged: _changeVolume,
-						activeColor: Colors.white,
+						onChanged: (v) => widget.player.setVolume(v * 100),
+						activeColor: Theme.of(context).colorScheme.secondary,
 						inactiveColor: Colors.grey,
 					),
 				],
@@ -173,25 +170,25 @@ class _PlayerOverlayState extends State<PlayerOverlay> {
 				crossAxisAlignment: CrossAxisAlignment.start,
 				children: [
 					Slider(
-						value: currentPosition.inSeconds.toDouble(),
+						value: position.inSeconds.toDouble(),
 						min: 0,
-						max: totalDuration.inSeconds.toDouble(),
+						max: duration.inSeconds.toDouble(),
 						onChanged: (value) {
-							widget.controller.seekTo(Duration(seconds: value.toInt()));
+							widget.player.seek(Duration(seconds: value.toInt()));
 						},
 						activeColor: Theme.of(context).colorScheme.tertiary,
-						inactiveColor: Colors.white,
+						inactiveColor: Theme.of(context).colorScheme.secondary,
 					),
 					Row(
 						mainAxisAlignment: MainAxisAlignment.spaceBetween,
 						children: [
 							Text(
-								_formatDuration(currentPosition),
-								style: const TextStyle(color: Colors.white),
+								_formatDuration(position),
+								style: TextStyle(color: Theme.of(context).colorScheme.secondary),
 							),
 							Text(
-								_formatDuration(totalDuration - currentPosition),
-								style: const TextStyle(color: Colors.white),
+								_formatDuration(duration - position),
+								style: TextStyle(color: Theme.of(context).colorScheme.secondary),
 							),
 						],
 					),
@@ -207,7 +204,7 @@ class _PlayerOverlayState extends State<PlayerOverlay> {
 				mainAxisAlignment: MainAxisAlignment.center,
 				children: [
 					IconButton(
-						icon: const Icon(Icons.replay_10, color: Colors.white, size: 30),
+						icon: Icon(Icons.replay_10, color: Theme.of(context).colorScheme.secondary, size: 30),
 						onPressed: () => _seek(false),
 					),
 					const Gap(20),
@@ -215,13 +212,13 @@ class _PlayerOverlayState extends State<PlayerOverlay> {
 						onTap: _togglePlayPause,
 						child: Icon(
 							isPlaying ? Icons.pause : Icons.play_arrow,
-							color: Colors.white,
+							color: Theme.of(context).colorScheme.secondary,
 							size: 60,
 						),
 					),
 					const Gap(20),
 					IconButton(
-						icon: const Icon(Icons.forward_10, color: Colors.white, size: 30),
+						icon: Icon(Icons.forward_10, color: Theme.of(context).colorScheme.secondary, size: 30),
 						onPressed: () => _seek(true),
 					),
 				],
@@ -233,24 +230,30 @@ class _PlayerOverlayState extends State<PlayerOverlay> {
 		return Positioned(
 			bottom: 100,
 			right: 40,
-			child: DropdownButton<int>(
-				dropdownColor: Colors.black87,
-				value: widget.audioTracks.containsKey(selectedAudioTrack)
-						? selectedAudioTrack
-						: (widget.audioTracks.isNotEmpty ? widget.audioTracks.keys.first : null),
-				hint: const Text("Aucune piste audio", style: TextStyle(color: Colors.white)),
-				items: widget.audioTracks.entries.map((entry) {
-					return DropdownMenuItem<int>(
-						value: entry.key,
-						child: Text(entry.value, style: const TextStyle(color: Colors.white)),
+			child: DropdownButton<String>(
+				dropdownColor: Theme.of(context).primaryColor,
+				value: activeAudioTrack.id,
+				hint: Text(
+					"Aucune piste audio",
+					style: TextStyle(color: Theme.of(context).colorScheme.secondary),
+				),
+				items: audioTracks.map((track) {
+					return DropdownMenuItem<String>(
+						value: track.id,
+						child: Text(
+							track.title ?? track.id,
+							style: TextStyle(
+								color: track.id == activeAudioTrack.id
+									? Theme.of(context).primaryColor
+									: Theme.of(context).colorScheme.secondary,
+							),
+						),
 					);
 				}).toList(),
 				onChanged: (value) {
 					if (value != null) {
-						widget.controller.setAudioTrack(value);
-						setState(() {
-							selectedAudioTrack = value;
-						});
+						final track = audioTracks.firstWhere((t) => t.id == value);
+						widget.player.setAudioTrack(track);
 					}
 				},
 			),
@@ -261,30 +264,30 @@ class _PlayerOverlayState extends State<PlayerOverlay> {
 		return Positioned(
 			bottom: 150,
 			right: 40,
-			child: DropdownButton<int>(
-				dropdownColor: Colors.black87,
-				value: widget.subtitleTracks.containsKey(selectedSubtitleTrack)
-						? selectedSubtitleTrack
-						: (widget.subtitleTracks.isNotEmpty ? widget.subtitleTracks.keys.first : -1),
-				hint: const Text("Aucun sous-titre", style: TextStyle(color: Colors.white)),
-				items: [
-					const DropdownMenuItem<int>(
-						value: -1,
-						child: Text("Aucun sous-titre", style: TextStyle(color: Colors.white)),
-					),
-					...widget.subtitleTracks.entries.map((entry) {
-						return DropdownMenuItem<int>(
-							value: entry.key,
-							child: Text(entry.value, style: const TextStyle(color: Colors.white)),
-						);
-					}).toList(),
-				],
+			child: DropdownButton<String>(
+				dropdownColor: Theme.of(context).primaryColor,
+				value: activeSubtitleTrack.id,
+				hint: Text(
+					"Aucun sous-titre",
+					style: TextStyle(color: Theme.of(context).colorScheme.secondary)
+				),
+				items: subtitleTracks.map((track) {
+					return DropdownMenuItem<String>(
+						value: track.id,
+						child: Text(
+							track.title ?? track.id,
+							style: TextStyle(
+								color: track.id == activeSubtitleTrack.id
+									? Theme.of(context).primaryColor
+									: Theme.of(context).colorScheme.secondary,
+							),
+						),
+					);
+				}).toList(),
 				onChanged: (value) {
 					if (value != null) {
-						widget.controller.setSpuTrack(value);
-						setState(() {
-							selectedSubtitleTrack = value;
-						});
+						final track = subtitleTracks.firstWhere((t) => t.id == value);
+						widget.player.setSubtitleTrack(track);
 					}
 				},
 			),

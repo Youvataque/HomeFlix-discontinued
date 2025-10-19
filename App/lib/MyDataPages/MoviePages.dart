@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:gap/gap.dart';
+import 'package:homeflix/Components/ViewComponents/LitleComponent.dart';
 import 'package:homeflix/Components/ViewComponents/PlayerPages/VideoPlayer.dart';
 import 'package:homeflix/Components/ViewComponents/PlayerPages/VideoProxyServer.dart';
 import 'package:homeflix/Data/NightServices.dart';
@@ -41,7 +42,7 @@ class _MoviePagesState extends State<MoviePages> {
 						widget.movie
 					);
 					if (path == null) {
-						print("Path non trouvé, annulation.");
+						if (mounted) infoDialog(context, "Path non trouvé, annulation.", true);
 						return;
 					}
 					final encodedPath = Uri.encodeComponent(path);

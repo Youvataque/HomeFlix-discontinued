@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:gap/gap.dart';
 import 'package:homeflix/Components/ViewComponents/EpTemplate.dart';
+import 'package:homeflix/Components/ViewComponents/LitleComponent.dart';
 import 'package:homeflix/Components/ViewComponents/PlayerPages/VideoPlayer.dart';
 import 'package:homeflix/Components/ViewComponents/PlayerPages/VideoProxyServer.dart';
 import 'package:homeflix/Data/NightServices.dart';
+import 'package:collection/collection.dart';
 
 ///////////////////////////////////////////////////////////////
 /// Template des pages de séries
@@ -35,10 +37,22 @@ class _SeriesPagesState extends State<SeriesPages> {
 	@override
 	void initState() {
 		super.initState();
-		for (int x = 0; x < widget.bigData['seasons'].length; x++) {
-			final seriesNb = widget.bigData['seasons'][x]['season_number'];
-			if ( seriesNb > 0 && NIGHTServices().checkDlSeason(widget.serveurData['seasons']['S$seriesNb'])) {
-				seasons.add(widget.bigData['seasons'][x]['season_number']);
+		final bigDataSeasons = widget.bigData['seasons'];
+		if (bigDataSeasons is! List) return;
+
+		for (int x = 0; x < bigDataSeasons.length; x++) {
+			final seasonInfo = bigDataSeasons.elementAtOrNull(x);
+			if (seasonInfo is! Map<String, dynamic>) continue;
+
+			final seriesNb = seasonInfo['season_number'];
+			if (seriesNb is! int || seriesNb <= 0) continue;
+
+			final serverSeasons = widget.serveurData['seasons'];
+			if (serverSeasons is! Map<String, dynamic>) continue;
+
+			final serverSeasonData = serverSeasons['S$seriesNb'];
+			if (NIGHTServices().checkDlSeason(serverSeasonData)) {
+				seasons.add(seriesNb);
 			}
 		}
 	}
@@ -126,29 +140,52 @@ class _SeriesPagesState extends State<SeriesPages> {
 	///////////////////////////////////////////////////////////////
 	/// affichage des épisodes
 	Widget printEp() {
-		final isComplete = widget.serveurData['seasons']['S$season']['complete'];
+		// Safe access to server data
+		final serverSeasons = widget.serveurData['seasons'];
+		final currentServerSeason = (serverSeasons is Map<String, dynamic>) ? serverSeasons['S$season'] : null;
+		final isComplete = (currentServerSeason is Map<String, dynamic> && currentServerSeason['complete'] == true);
+
+		// Safe access to season content from TMDB
+		final seasonContent = widget.seasContent.elementAtOrNull(season - 1);
+		final episodesInSeason = (seasonContent is Map<String, dynamic>) ? seasonContent['episodes'] : null;
+		if (episodesInSeason is! List) {
+			return const SizedBox.shrink(); // No episodes for this season
+		}
+
+		// Safe access to downloaded episode list
+		final serverEpisodes = (currentServerSeason is Map<String, dynamic>) ? currentServerSeason['episode'] : null;
+		final downloadedEpisodes = (serverEpisodes is List) ? serverEpisodes : [];
+
+		final int episodeCount = isComplete ? episodesInSeason.length : downloadedEpisodes.length;
+
 		return Column(
 			key: ValueKey(season),
 			children: List.generate(
-				isComplete ?
-						widget.seasContent[season - 1]['episodes'].length
-					:
-						widget.serveurData['seasons']['S$season']['episode'].length,
+				episodeCount,
 				(index) {
-					final tempS = widget.seasContent[season - 1]['episodes'];
-					final tempE = isComplete ? index : widget.serveurData['seasons']['S$season']['episode'][index];
+					final episodeNumber = isComplete ? index + 1 : (downloadedEpisodes.elementAtOrNull(index) as int? ?? -1);
+					if (episodeNumber == -1) return const SizedBox.shrink();
+
+					final episodeData = episodesInSeason.elementAtOrNull(episodeNumber - 1);
+					if (episodeData is! Map<String, dynamic>) return const SizedBox.shrink();
+
+					final stillPath = episodeData['still_path'] as String?;
+					final imgPath = stillPath != null
+							? "https://image.tmdb.org/t/p/w300/$stillPath?api_key=${dotenv.get('TMDB_KEY')}"
+							: null;
+
 					return Padding(
 						padding: EdgeInsets.only(
-							bottom: index == tempS.length - 1 ? 0 : 20,
+							bottom: index == episodeCount - 1 ? 0 : 20,
 						),
 						child: Eptemplate(
-							index: isComplete ? tempE : tempE - 1,
-							time: tempS[tempE]['runtime'] ?? 0,
-							title: tempS[tempE]['name'] ?? "inconue",
-							imgPath: "https://image.tmdb.org/t/p/w300/${tempS[tempE]['still_path']}?api_key=${dotenv.get('TMDB_KEY')}",
-							overview: tempS[tempE]['overview'],
-							id: "${widget.bigData['id']}_${widget.seasContent[season - 1]['_id']}_${tempS[tempE]['id']}",
-							onTap: () => onEpTap(isComplete ? tempE + 1 : tempE)
+							index: episodeNumber - 1,
+							time: episodeData['runtime'] as int? ?? 0,
+							title: episodeData['name'] as String? ?? "Titre inconnu",
+							imgPath: imgPath,
+							overview: episodeData['overview'] as String?,
+							id: "${widget.bigData['id']}_${seasonContent?['_id']}_${episodeData['id']}",
+							onTap: () => onEpTap(episodeNumber)
 						),
 					);
 				},
@@ -169,7 +206,7 @@ class _SeriesPagesState extends State<SeriesPages> {
 			widget.movie
 		);
 		if (path == null) {
-			print("Path non trouvé, annulation.");
+			if (mounted) infoDialog(context, "Path non trouvé, annulation.", true);
 			return;
 		}
 		final encodedPath = Uri.encodeComponent(path);

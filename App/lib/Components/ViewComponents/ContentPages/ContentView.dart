@@ -189,7 +189,6 @@ class _ContentviewState extends State<Contentview> {
 	///////////////////////////////////////////////////////////////
 	/// partie droite de la présentation avec toutes les infos importante
 	Widget rightDetailsPart() {
-		print(widget.datas['seasons']);
 		return SizedBox(
 			height: MediaQuery.sizeOf(context).width * 0.38 * 1.5,
 			width: MediaQuery.sizeOf(context).width * 0.47,
