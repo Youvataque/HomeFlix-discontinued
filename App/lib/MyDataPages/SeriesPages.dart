@@ -140,19 +140,16 @@ class _SeriesPagesState extends State<SeriesPages> {
 	///////////////////////////////////////////////////////////////
 	/// affichage des épisodes
 	Widget printEp() {
-		// Safe access to server data
 		final serverSeasons = widget.serveurData['seasons'];
 		final currentServerSeason = (serverSeasons is Map<String, dynamic>) ? serverSeasons['S$season'] : null;
 		final isComplete = (currentServerSeason is Map<String, dynamic> && currentServerSeason['complete'] == true);
 
-		// Safe access to season content from TMDB
 		final seasonContent = widget.seasContent.elementAtOrNull(season - 1);
 		final episodesInSeason = (seasonContent is Map<String, dynamic>) ? seasonContent['episodes'] : null;
 		if (episodesInSeason is! List) {
-			return const SizedBox.shrink(); // No episodes for this season
+			return const SizedBox.shrink();
 		}
 
-		// Safe access to downloaded episode list
 		final serverEpisodes = (currentServerSeason is Map<String, dynamic>) ? currentServerSeason['episode'] : null;
 		final downloadedEpisodes = (serverEpisodes is List) ? serverEpisodes : [];
 
@@ -215,8 +212,8 @@ class _SeriesPagesState extends State<SeriesPages> {
 		final proxyUrl = await videoProxy.getProxyUrl(videoUrl);
 		if (mounted) {
 			Navigator.push(
-					context,
-					MaterialPageRoute(builder: (context) => VlcVideoPlayer(videoUrl: proxyUrl, videoProxy: videoProxy,))
+				context,
+				MaterialPageRoute(builder: (context) => VlcVideoPlayer(videoUrl: proxyUrl, videoProxy: videoProxy,))
 			);
 		}
 	}

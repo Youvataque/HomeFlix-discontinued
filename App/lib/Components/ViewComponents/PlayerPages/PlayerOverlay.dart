@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:gap/gap.dart';
 import 'package:homeflix/Components/Tools/FormatTool/MinToHour.dart';
 import 'package:homeflix/Components/ViewComponents/PlayerPages/VideoProxyServer.dart';
+import 'package:homeflix/main.dart';
 import 'package:media_kit/media_kit.dart';
 
 class PlayerOverlay extends StatefulWidget {
@@ -81,7 +82,7 @@ class _PlayerOverlayState extends State<PlayerOverlay> {
 
 	void _adjustScale(double delta) {
 		setState(() {
-			scaleValue = (scaleValue + delta).clamp(0.5, 2.0);
+			scaleValue = (scaleValue + delta).clamp(0.5, 3.0);
 		});
 		widget.updateScale(scaleValue);
 	}
@@ -116,6 +117,7 @@ class _PlayerOverlayState extends State<PlayerOverlay> {
 					IconButton(
 						icon: Icon(Icons.close, color: Theme.of(context).colorScheme.secondary),
 						onPressed: () {
+							isPlayerFullScreen.value = false;
 							SystemChrome.setPreferredOrientations([
 								DeviceOrientation.portraitUp,
 								DeviceOrientation.portraitDown,

@@ -18,6 +18,7 @@ import 'firebase_options.dart';
 
 GlobalKey<MainState> mainKey = GlobalKey<MainState>();
 const double kMaxViewWidth = 900;
+final isPlayerFullScreen = ValueNotifier<bool>(false);
 
 void main() async {
 	WidgetsFlutterBinding.ensureInitialized();
@@ -96,43 +97,52 @@ class MainState extends State<Main> {
 			scrollBehavior: MyCustomScrollBehavior(),
 			debugShowCheckedModeBanner: false,
 			builder: (context, child) {
-				final MediaQueryData mediaQuery = MediaQuery.of(context);
-				final double screenWidth = mediaQuery.size.width;
+				return ValueListenableBuilder<bool>(
+					valueListenable: isPlayerFullScreen,
+					builder: (context, isFullScreen, navigator) { 
+						if (isFullScreen) {
+							return navigator!;
+						}
+						final MediaQueryData mediaQuery = MediaQuery.of(context);
+						final double screenWidth = mediaQuery.size.width;
 
-				if (screenWidth <= kMaxViewWidth) {
-					return child!;
-				}
+						if (screenWidth <= kMaxViewWidth) {
+							return navigator!;
+						}
 
-				const double targetWidth = kMaxViewWidth;
-				final double horizontalPadding = (screenWidth - targetWidth) / 2;
+						const double targetWidth = kMaxViewWidth;
+						final double horizontalPadding = (screenWidth - targetWidth) / 2;
 
-				final MediaQueryData newMediaQueryData = mediaQuery.copyWith(
-					size: Size(targetWidth, mediaQuery.size.height),
-					padding: mediaQuery.padding.copyWith(
-						left: mediaQuery.padding.left + horizontalPadding,
-						right: mediaQuery.padding.right + horizontalPadding,
-					),
-					viewInsets: mediaQuery.viewInsets.copyWith(
-						left: mediaQuery.viewInsets.left + horizontalPadding,
-						right: mediaQuery.viewInsets.right + horizontalPadding,
-					),
-					viewPadding: mediaQuery.viewPadding.copyWith(
-						left: mediaQuery.viewPadding.left + horizontalPadding,
-						right: mediaQuery.viewPadding.right + horizontalPadding,
-					),
-				);
-
-				return Container(
-					color: Theme.of(context).scaffoldBackgroundColor,
-					child: Center(
-						child: SizedBox(
-							width: targetWidth,
-							child: MediaQuery(
-								data: newMediaQueryData,
-								child: child!,
+						final MediaQueryData newMediaQueryData = mediaQuery.copyWith(
+							size: Size(targetWidth, mediaQuery.size.height),
+							padding: mediaQuery.padding.copyWith(
+								left: mediaQuery.padding.left + horizontalPadding,
+								right: mediaQuery.padding.right + horizontalPadding,
 							),
-						),
-					),
+							viewInsets: mediaQuery.viewInsets.copyWith(
+								left: mediaQuery.viewInsets.left + horizontalPadding,
+								right: mediaQuery.viewInsets.right + horizontalPadding,
+							),
+							viewPadding: mediaQuery.viewPadding.copyWith(
+								left: mediaQuery.viewPadding.left + horizontalPadding,
+								right: mediaQuery.viewPadding.right + horizontalPadding,
+							),
+						);
+
+						return Container(
+							color: Theme.of(context).scaffoldBackgroundColor,
+							child: Center(
+								child: SizedBox(
+									width: targetWidth,
+									child: MediaQuery(
+										data: newMediaQueryData,
+										child: navigator!,
+									),
+								),
+							),
+						);
+					},
+					child: child,
 				);
 			},
 			home: FutureBuilder(

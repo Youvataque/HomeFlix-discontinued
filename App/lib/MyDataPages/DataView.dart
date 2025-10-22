@@ -63,9 +63,7 @@ class _DataviewState extends State<Dataview> {
 						useRootNavigator: true,
 						builder: (modalContext) => Scaffold(
 							backgroundColor: Colors.transparent,
-							body: SafeArea(
-								bottom: false,
-								child: Column(
+							body: Column(
 									children: [
 										Expanded(
 											child: MainContentPages(
@@ -78,7 +76,7 @@ class _DataviewState extends State<Dataview> {
 										),
 									],
 								),
-							),
+							
 						),
 					);
 				}
