@@ -56,11 +56,11 @@ class _LoginState extends State<Login> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 15),
           child: MainButton(
-              func: () => login(),
-              color: Theme.of(context).colorScheme.tertiary,
-              titleColor: Theme.of(context).primaryColor,
-              title: "Se connecter"
-          ),
+				func: () => login(),
+				color: Theme.of(context).colorScheme.tertiary,
+				titleColor: Theme.of(context).primaryColor,
+				title: "Se connecter"
+			),
         ),
         const Gap(50),
       ],

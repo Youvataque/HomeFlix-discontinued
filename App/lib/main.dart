@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -10,6 +9,7 @@ import 'package:homeflix/Components/FondamentalAppCompo/MyTabbar.dart';
 import 'package:homeflix/Components/Logins/Login.dart';
 import 'package:homeflix/Components/Tools/Theme/ColorsTheme.dart';
 import 'package:homeflix/Components/ViewComponents/LitleComponent.dart';
+import 'package:homeflix/Components/ViewComponents/MyScrollBehavior.Dart';
 import 'package:homeflix/Data/NightServices.dart';
 import 'package:homeflix/Data/TmdbServices.dart';
 import 'package:media_kit/media_kit.dart';
@@ -17,14 +17,7 @@ import 'firebase_options.dart';
 
 
 GlobalKey<MainState> mainKey = GlobalKey<MainState>();
-
-class MyHttpOverrides extends HttpOverrides {
-  @override
-  HttpClient createHttpClient(SecurityContext? context) {
-    return super.createHttpClient(context)
-      ..badCertificateCallback = (cert, host, port) => true;
-  }
-}
+const double kMaxViewWidth = 900;
 
 void main() async {
 	WidgetsFlutterBinding.ensureInitialized();
@@ -37,7 +30,6 @@ void main() async {
 		DeviceOrientation.portraitUp,
 		DeviceOrientation.portraitDown,
 	]);
-    HttpOverrides.global = MyHttpOverrides();
    runApp(Main(key: mainKey));
 }
 
@@ -101,6 +93,48 @@ class MainState extends State<Main> {
 		return MaterialApp(
 			theme: darkTheme,
 			darkTheme: darkTheme,
+			scrollBehavior: MyCustomScrollBehavior(),
+			debugShowCheckedModeBanner: false,
+			builder: (context, child) {
+				final MediaQueryData mediaQuery = MediaQuery.of(context);
+				final double screenWidth = mediaQuery.size.width;
+
+				if (screenWidth <= kMaxViewWidth) {
+					return child!;
+				}
+
+				const double targetWidth = kMaxViewWidth;
+				final double horizontalPadding = (screenWidth - targetWidth) / 2;
+
+				final MediaQueryData newMediaQueryData = mediaQuery.copyWith(
+					size: Size(targetWidth, mediaQuery.size.height),
+					padding: mediaQuery.padding.copyWith(
+						left: mediaQuery.padding.left + horizontalPadding,
+						right: mediaQuery.padding.right + horizontalPadding,
+					),
+					viewInsets: mediaQuery.viewInsets.copyWith(
+						left: mediaQuery.viewInsets.left + horizontalPadding,
+						right: mediaQuery.viewInsets.right + horizontalPadding,
+					),
+					viewPadding: mediaQuery.viewPadding.copyWith(
+						left: mediaQuery.viewPadding.left + horizontalPadding,
+						right: mediaQuery.viewPadding.right + horizontalPadding,
+					),
+				);
+
+				return Container(
+					color: Theme.of(context).scaffoldBackgroundColor,
+					child: Center(
+						child: SizedBox(
+							width: targetWidth,
+							child: MediaQuery(
+								data: newMediaQueryData,
+								child: child!,
+							),
+						),
+					),
+				);
+			},
 			home: FutureBuilder(
 				key: ValueKey(refreshKey),
 				future: downloadData(),

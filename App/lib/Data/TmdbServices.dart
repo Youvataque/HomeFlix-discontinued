@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 import 'dart:math';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -52,35 +51,10 @@ class TMDBService {
 		data.addAll(newData);
 		return data;
 	}
-	
-	///////////////////////////////////////////////////////////////
-	/// Télécharge les images des films
-	Future<File?> downloadMovieImageTemp(String imageUrl, String movieId, int mode) async {
-		String type = "";
-		try {
-			final response = await http.get(Uri.parse(imageUrl));
-			if (mode == 1) {type = "b";}
-			else if (mode == 2) {type = "s";}
-			else {type = "";}
-			if (response.statusCode == 200) {
-				final bytes = response.bodyBytes;
-				final tempDir = Directory.systemTemp;
-				final file = File('${tempDir.path}/$movieId$type.jpg');
-				await file.writeAsBytes(bytes);
-				return file;
-			} else {
-				print('Failed to download image from: $imageUrl');
-				return null;
-			}
-		} catch (e) {
-			print('Error downloading image from: $imageUrl, Error: $e');
-			return null;
-		}
-	}
 
 	///////////////////////////////////////////////////////////////
 	/// Télécharge les image poster ou renvoi un message si non présent
-	Future<File?> fetchAndDownloadMovieImage(String movieId, bool movie, String quality) async {
+	Future<String?> fetchMovieImageUrl(String movieId, bool movie, String quality) async {
 		final apiKey = dotenv.get('TMDB_KEY');
 		final url = 'https://api.themoviedb.org/3/${movie ? "movie" : "tv"}/$movieId?api_key=$apiKey';
 		final response = await http.get(Uri.parse(url));
@@ -89,8 +63,7 @@ class TMDBService {
 			final data = json.decode(response.body);
 			final posterPath = data['poster_path'];
 			if (posterPath != null) {
-				final imageUrl = 'https://image.tmdb.org/t/p/w$quality$posterPath';
-				return await downloadMovieImageTemp(imageUrl, movieId.toString(), 0);
+				return 'https://image.tmdb.org/t/p/w$quality$posterPath';
 			} else {
 				print('Aucune image trouvée pour le film avec ID: $movieId');
 				return null;
@@ -103,10 +76,9 @@ class TMDBService {
 
 	///////////////////////////////////////////////////////////////
 	/// Télécharge les images de fond ou renvoi un message si non présent
-	Future<File?> fetchAndDownloadMovieBackdrop(String movieId, bool isMovie, String quality) async {
+	Future<String?> fetchMovieBackdropUrl(String movieId, bool isMovie, String quality) async {
 		final apiKey = dotenv.get('TMDB_KEY');
 		final url = 'https://api.themoviedb.org/3/${isMovie ? "movie" : "tv"}/$movieId/images?api_key=$apiKey';
-
 		final response = await http.get(Uri.parse(url));
 
 		if (response.statusCode == 200) {
@@ -114,11 +86,10 @@ class TMDBService {
 			final backdrops = data['backdrops'] as List<dynamic>;
 
 			if (backdrops.isNotEmpty) {
-			final backdropPath = backdrops[0]['file_path'];
-			if (backdropPath != null) {
-				final imageUrl = 'https://image.tmdb.org/t/p/w$quality$backdropPath';
-				return await downloadMovieImageTemp(imageUrl, movieId.toString(), 1);
-			}
+				final backdropPath = backdrops[0]['file_path'];
+				if (backdropPath != null) {
+					return 'https://image.tmdb.org/t/p/w$quality$backdropPath';
+				}
 			}
 			print('Aucun paysage trouvé pour le film avec ID: $movieId');
 			return null;
@@ -141,29 +112,12 @@ class TMDBService {
 		);
 	}
 
-	Future<File?> getImgWithPath(String path, String id) async {
-		final tempDir = Directory.systemTemp;
-		final file = File('${tempDir.path}/${id}s.jpg');
-
-		if (await file.exists()) {
-			return file;
-		} else {
-			print('Downloading image from: $path');
-			return downloadMovieImageTemp(path, id, 2);
-		}
-	}
-
 	///////////////////////////////////////////////////////////////
 	/// recupère l'image dans la db si elle n'est pas déjà présente en mémoire sans fournir le path
-	Future<File?> getImgWithoutPath(String movieId, bool movie, bool mode, String quality) async {
-		final tempDir = Directory.systemTemp;
-		final file = File('${tempDir.path}/$movieId${mode ? 'b' : ''}.jpg');
-
-		if (await file.exists()) {
-			return file;
-		} else {
-			return mode ? fetchAndDownloadMovieBackdrop(movieId, movie, quality) : fetchAndDownloadMovieImage(movieId, movie, quality);
-		}
+	Future<String?> getImgUrlWithoutPath(String movieId, bool movie, bool mode, String quality) {
+		return mode 
+			? fetchMovieBackdropUrl(movieId, movie, quality) 
+			: fetchMovieImageUrl(movieId, movie, quality);
 	}
 
 	///////////////////////////////////////////////////////////////

@@ -165,7 +165,7 @@ router.post('/contentSearch',authMiddleware, async (req: Request, res: Response)
 
 /////////////////////////////////////////////////////////////////////////////////
 // Route pour lire une vidéo en streaming
-router.get('/streamVideo', authMiddleware, (req, res) => {
+router.get('/streamVideo', (req, res) => {
 	const videoPath = decodeURIComponent(req.query.path as string);
 
 	if (!videoPath || typeof videoPath !== 'string') {

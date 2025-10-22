@@ -24,6 +24,7 @@
     "@types/levenshtein": "^1.0.4",
     "axios": "^1.7.7",
     "chalk": "^5.4.1",
+    "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.21.0",
     "firebase-admin": "^13.0.2",

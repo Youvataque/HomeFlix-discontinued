@@ -96,7 +96,6 @@ class _MainContentPagesState extends State<MainContentPages> {
 		return Scaffold(
 			backgroundColor: Theme.of(context).scaffoldBackgroundColor,
 			body: SizedBox(
-				height: MediaQuery.sizeOf(context).height,
 				width: MediaQuery.sizeOf(context).width,
 				child: Stack(
 					children: [

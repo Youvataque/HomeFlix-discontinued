@@ -7,9 +7,18 @@ class NIGHTServices {
 	static Map<String, dynamic> specStatus = {};
   final String port = '4000';
 	Future<String?> _getIdToken() async {
-		User? user = FirebaseAuth.instance.currentUser;
-		return user != null ? await user.getIdToken() : null;
-	}
+        try {
+            User? user = FirebaseAuth.instance.currentUser;
+            if (user == null) {
+                return null;
+            }
+            return await user.getIdToken();
+
+        } catch (e) {
+            print("Erreur critique lors de la récupération du IdToken: $e");
+            return null;
+        }
+    }
 
 	///////////////////////////////////////////////////////////////
 	/// méthode pour récupérer les données des contenues téléchargés sur le server

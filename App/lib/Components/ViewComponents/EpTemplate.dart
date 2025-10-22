@@ -1,9 +1,8 @@
-import 'dart:io';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:homeflix/Components/Tools/FormatTool/MinToHour.dart';
 import 'package:homeflix/Components/ViewComponents/LitleComponent.dart';
-import 'package:homeflix/Data/TmdbServices.dart';
 
 ///////////////////////////////////////////////////////////////
 /// template pour les épisodes de séries
@@ -122,40 +121,21 @@ class _EptemplateState extends State<Eptemplate> {
 				child: const Center(child: Icon(Icons.image_not_supported)),
 			);
 		}
-		return FutureBuilder<File?>(
-			future: TMDBService().getImgWithPath(widget.imgPath!, widget.id),
-			builder: (BuildContext context, AsyncSnapshot<File?> snapshot) {
-				if (snapshot.connectionState == ConnectionState.waiting) {
-					return myIndicator(context, 10);
-				} else if (snapshot.hasError) {
-					return const Center(
-						child: Text(
-						'Erreur de chargement de l\'image',
-						style: TextStyle(color: Colors.red),
-						),
-					);
-				} else if (snapshot.hasData && snapshot.data != null) {
-					final file = snapshot.data!;
-					return ClipRRect(
-						borderRadius: BorderRadius.circular(10),
-						child: Image.file(
-							file,
-							width: MediaQuery.sizeOf(context).width / 3,
-							fit: BoxFit.cover,
-						),
-					);
-				} else {
-					return Container(
-						width: MediaQuery.sizeOf(context).width / 3,
-						height: (MediaQuery.sizeOf(context).width / 3) * 9 / 16,
-						decoration: BoxDecoration(
-							color: Colors.grey[800],
-							borderRadius: BorderRadius.circular(10),
-						),
-						child: const Center(child: Icon(Icons.image_not_supported)),
-					);
-				}
-			},
+		return CachedNetworkImage(
+			imageUrl: widget.imgPath!,
+			width: MediaQuery.sizeOf(context).width / 3,
+			height: (MediaQuery.sizeOf(context).width / 3) * 9 / 16,
+			fit: BoxFit.cover,
+			placeholder: (context, url) => myIndicator(context, 10),
+			errorWidget: (context, url, error) => Container(
+				width: MediaQuery.sizeOf(context).width / 3,
+				height: (MediaQuery.sizeOf(context).width / 3) * 9 / 16,
+				decoration: BoxDecoration(
+					color: Colors.grey[800],
+					borderRadius: BorderRadius.circular(10),
+				),
+				child: const Center(child: Icon(Icons.image_not_supported)),
+			),
 		);
 	}
 

@@ -106,13 +106,16 @@ void toCategView(BuildContext context, Map<String, dynamic> details, String left
 	void infoDialog(BuildContext context, String info, bool isError) {
 		ScaffoldMessenger.of(context).showSnackBar(
 			SnackBar(
-				content: Text(
-					info,
-					textAlign: TextAlign.center,
-					style: TextStyle(
-						color: Theme.of(context).colorScheme.secondary,
-						fontSize: 14,
-						fontWeight: FontWeight.w600
+				content: SizedBox(
+					width: double.infinity,
+					child: Text(
+						info,
+						textAlign: TextAlign.center,
+						style: TextStyle(
+							color: Theme.of(context).colorScheme.secondary,
+							fontSize: 14,
+							fontWeight: FontWeight.w600
+						),
 					),
 				),
 				backgroundColor: isError ? Theme.of(context).colorScheme.error : Colors.green,
