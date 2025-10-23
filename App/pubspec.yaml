@@ -47,7 +47,7 @@ dependencies:
   media_kit_libs_video: ^1.0.7
   collection: ^1.18.0
   firebase_core: ^4.2.0
-  firebase_auth: ^6.1.1
+  firebase_auth: ^6.1.0
   shelf: ^1.4.2
   modal_bottom_sheet: ^3.0.0
   cached_network_image: ^3.4.1
@@ -57,6 +57,9 @@ flutter_launcher_icons:
   image_path: "src/images/icon.jpg"
   adaptive_icon_background: "#0f1d24"
   adaptive_icon_foreground: "src/images/logo.png"
+  macos:
+    generate: true
+    image_path: "src/images/icon.jpg"
 
 
 dev_dependencies:
