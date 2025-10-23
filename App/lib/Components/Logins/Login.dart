@@ -109,8 +109,8 @@ class _LoginState extends State<Login> {
 		}
 		} catch (error) {
 			if (mounted) {
-				infoDialog(context, error.toString(), true);
+				infoDialog(context, loginsError(error.toString()), true);
 			}
 		}
-  }
+	}
 }
