@@ -13,16 +13,21 @@ export const qbittorrentAPI = axios.create({
 
 /////////////////////////////////////////////////////////////////////////////////
 // recherche un torrent dans qbittorrent à partir d'un nom unique (nom d'archive)
-export async function searchTorrent(name: string): Promise<SearchResult> {
+export async function searchTorrent(name: string, minDate: number = 0): Promise<SearchResult> {
 	const result: SearchResult = {
 		hash: "",
 		percent: 60,
-		name : name
+		name: name
 	};
 	try {
 		await qbittorrentAPI.post('/auth/login');
 		const response = await qbittorrentAPI.get('/torrents/info');
-		response.data.forEach((torrent: { name: string, hash: string }) => {
+		response.data.forEach((torrent: { name: string, hash: string, addition_date: number }) => {
+			// Filter by date if a minimum date is provided
+			if (minDate > 0 && torrent.addition_date < minDate) {
+				return;
+			}
+
 			const torrentName = extractInfo(cleanName(torrent.name, true));
 			const similarityPercentage = calculateContentSimilarity(name, torrentName);
 			if (similarityPercentage > result.percent) {
@@ -38,10 +43,10 @@ export async function searchTorrent(name: string): Promise<SearchResult> {
 
 /////////////////////////////////////////////////////////////////////////////////
 // Fonction qui retourne le hash du film le plus proche de celui recherché.
-export async function moviePossHash(name: string, originalName: string): Promise<SearchResult> {
+export async function moviePossHash(name: string, originalName: string, minDate: number = 0): Promise<SearchResult> {
 	const result: MovieCheck = {
-		poss1 : await searchTorrent(extractInfo(cleanName(name, true))),
-		poss2 : await searchTorrent(extractInfo(cleanName(originalName, true)))
+		poss1: await searchTorrent(extractInfo(cleanName(name, true)), minDate),
+		poss2: await searchTorrent(extractInfo(cleanName(originalName, true)), minDate)
 	}
 	const maxPoss: SearchResult = Object.values(result).reduce((best, current) => {
 		return current.percent > best.percent ? current : best;
@@ -52,16 +57,16 @@ export async function moviePossHash(name: string, originalName: string): Promise
 
 /////////////////////////////////////////////////////////////////////////////////
 // Fonction qui retourne le hash de le serie la plus proche de celle recherchée.
-export async function SeriePossHash(name: string, originalName: string): Promise<SearchResult> {
+export async function SeriePossHash(name: string, originalName: string, minDate: number = 0): Promise<SearchResult> {
 	const all1: string = extractInfo(cleanName(name, false));
 	const all2: string = extractInfo(cleanName(originalName, false));
 	const result: SerieCheck = {
-		poss1 :  await searchTorrent(all1),
-		poss2 :  await searchTorrent(all1.replace(/e\d{2}\b/i, "").trim()),
-		poss3 :  await searchTorrent(all1.replace(/\bs\d{2}\s?e\d{2}\b/gi, '').replace(/\s+/g, ' ').trim()),
-		poss4 :  await searchTorrent(all2),
-		poss5 :  await searchTorrent(all2.replace(/e\d{2}\b/i, "").trim()),
-		poss6 :  await searchTorrent(all2.replace(/\bs\d{2}\s?e\d{2}\b/gi, '').replace(/\s+/g, ' ').trim()),
+		poss1: await searchTorrent(all1, minDate),
+		poss2: await searchTorrent(all1.replace(/e\d{2}\b/i, "").trim(), minDate),
+		poss3: await searchTorrent(all1.replace(/\bs\d{2}\s?e\d{2}\b/gi, '').replace(/\s+/g, ' ').trim(), minDate),
+		poss4: await searchTorrent(all2, minDate),
+		poss5: await searchTorrent(all2.replace(/e\d{2}\b/i, "").trim(), minDate),
+		poss6: await searchTorrent(all2.replace(/\bs\d{2}\s?e\d{2}\b/gi, '').replace(/\s+/g, ' ').trim(), minDate),
 	}
 	const maxPoss: SearchResult = Object.values(result).reduce((best, current) => {
 		return current.percent > best.percent ? current : best;
@@ -174,6 +179,25 @@ export async function deleteAllTorrent(newData: any): Promise<boolean> {
 		return true;
 	} catch (error) {
 		writeTheTime(chalk.red(`An error has occurred: ${error}`));
+		return false;
+	}
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+// fonction pour supprimer un torrent du client qbittorrent
+export async function deleteTorrentFromClient(hash: string): Promise<boolean> {
+	try {
+		await qbittorrentAPI.post('/auth/login');
+		await qbittorrentAPI.get('/torrents/delete', {
+			params: {
+				hashes: hash,
+				deleteFiles: true
+			}
+		});
+		writeTheTime(chalk.green(`Torrent ${hash} deleted from client.`));
+		return true;
+	} catch (error) {
+		writeTheTime(chalk.red(`Error while deleting torrent from client: ${error}`));
 		return false;
 	}
 }

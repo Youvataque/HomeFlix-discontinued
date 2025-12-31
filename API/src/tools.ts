@@ -16,9 +16,9 @@ export const specDb = new LowSync(adapter2, { spec: {} });
 const trashWord: (string | RegExp)[] = [
     'multi', 'vff', 'vfi', 'vfq', 'vf2', 'vo', 'vostfr', 'truefrench', 'french', 'en', 'fr', 'vof',
     'bluray', 'web', 'webrip', 'web-dl', 'bdrip', 'hdrip', 'dvdrip', 'nf', 'amazon', 'amzn', 'hdtv', 'rip', 'hddvd', 'dl',
-    '1080p', '720p', '2160p', '4k', '4KLight', '2k', '10bit', 'hdr', 'hdr10', 'hdr10plus', 'dolby vision', 'dv', 'hdlight', 'fullhd', 'imax', '5.1', '7.1', 
-    'x264', 'x265', 'h264', 'h265', 'hevc', 'aac', 'dts', 'ddp', 'ac3', 'eac3', 'mp4', 'mkv', 'av1','atmos', '6ch', 'k7', 
-    'fw', 'pophd', 'neostark', 'serqph', 'bonbon', 'qtz', 'slay3r', 'idys', 'r3mix', 'asko', 'btt', 'tox', 'gwen', 'hdgz', 'mhgz', 'preums', 'papaya', 'qtz', 'fervex', 'btfx', 
+    '1080p', '720p', '2160p', '4k', '4KLight', '2k', '10bit', 'hdr', 'hdr10', 'hdr10plus', 'dolby vision', 'dv', 'hdlight', 'fullhd', 'imax', '5.1', '7.1',
+    'x264', 'x265', 'h264', 'h265', 'hevc', 'aac', 'dts', 'ddp', 'ac3', 'eac3', 'mp4', 'mkv', 'av1', 'atmos', '6ch', 'k7',
+    'fw', 'pophd', 'neostark', 'serqph', 'bonbon', 'qtz', 'slay3r', 'idys', 'r3mix', 'asko', 'btt', 'tox', 'gwen', 'hdgz', 'mhgz', 'preums', 'papaya', 'qtz', 'fervex', 'btfx',
     /\b(19|20)\d{2}\b/g,
     'extended', 'remastered', 'final', 'complete', 'repack', 'custom', 'unrated', 'super duper cut', 'integrale', 'collection', 'edition', 'part', 'vol', 'volume', 'chapter',
     'saison', 'season', 'episode', 'ep', 's', 'e'
@@ -118,9 +118,9 @@ export function isMovie(title: string): boolean {
 
 /////////////////////////////////////////////////////////////////////////////////
 // Fonction utilitaire pour détecter le type MIME via l'extension
-export function getMimeType(filePath:string) {
+export function getMimeType(filePath: string) {
     const extension: string = filePath.toLowerCase().split('.').pop() || '';
-    const mimeTypes:Record<string, string> = {
+    const mimeTypes: Record<string, string> = {
         mp4: 'video/mp4',
         mkv: 'video/x-matroska',
         avi: 'video/x-msvideo',
@@ -161,11 +161,11 @@ export const fetchSrcUrl = async (id: string) => {
 // Renvoie la date actuel
 export function getActualTime(): string {
     const now = new Date();
-    
+
     const day = now.getDate().toString().padStart(2, '0');
     const month = (now.getMonth() + 1).toString().padStart(2, '0');
     const year = now.getFullYear().toString().substring(2);
-    
+
     const hours = now.getHours().toString().padStart(2, '0');
     const minutes = now.getMinutes().toString().padStart(2, '0');
     return `[${day}/${month}/${year} - ${hours}h${minutes}]`;
@@ -175,6 +175,21 @@ export function getActualTime(): string {
 // mes la date en début de chaine.
 export function writeTheTime(str: string) {
     console.log(`${chalk.bgGrey(getActualTime())} : ${str}`);
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+// converti une string date [DD/MM/YY - HHhMM] en timestamp (secondes)
+export function parseFormattedDate(dateStr: string): number {
+    // Expected format: [DD/MM/YY - HHhMM]
+    // Regex to capture parts
+    const match = dateStr.match(/\[(\d{2})\/(\d{2})\/(\d{2}) - (\d{2})h(\d{2})\]/);
+    if (!match) return 0;
+
+    const [_, day, month, year, hours, minutes] = match;
+    const fullYear = parseInt("20" + year, 10);
+    const date = new Date(fullYear, parseInt(month, 10) - 1, parseInt(day, 10), parseInt(hours, 10), parseInt(minutes, 10));
+
+    return Math.floor(date.getTime() / 1000);
 }
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -194,21 +209,21 @@ export function formatEpCode(num: number): string {
 /////////////////////////////////////////////////////////////////////////////////
 // clean a string that contains duplicate word "andor s01 s01 e02" -> "andor s01 e02"
 export function cleanDuplicateWords(title: string): string {
-	const splitted = title.trim().split(/\s+/);
-	const result: string[] = [];
+    const splitted = title.trim().split(/\s+/);
+    const result: string[] = [];
 
-	for (const word of splitted) {
-		const lowerWord = word.toLowerCase();
-		if (!result.some(w => w.toLowerCase().includes(lowerWord) && w.toLowerCase() !== lowerWord)) {
-			for (let i = result.length - 1; i >= 0; i--) {
-				const w = result[i].toLowerCase();
-				if (lowerWord.includes(w) && w !== lowerWord) {
-					result.splice(i, 1);
-				}
-			}
-			result.push(word);
-		}
-	}
+    for (const word of splitted) {
+        const lowerWord = word.toLowerCase();
+        if (!result.some(w => w.toLowerCase().includes(lowerWord) && w.toLowerCase() !== lowerWord)) {
+            for (let i = result.length - 1; i >= 0; i--) {
+                const w = result[i].toLowerCase();
+                if (lowerWord.includes(w) && w !== lowerWord) {
+                    result.splice(i, 1);
+                }
+            }
+            result.push(word);
+        }
+    }
 
-	return result.join(" ");
+    return result.join(" ");
 }

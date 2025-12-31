@@ -10,11 +10,11 @@ import util from "util";
 
 /////////////////////////////////////////////////////////////////////////////////
 // Fonction pour retourner le hash le plus proche de celui cherché pour tout 
-export async function contentBestHash(name: string, originalName: string, movie: boolean): Promise<SearchResult> {
+export async function contentBestHash(name: string, originalName: string, movie: boolean, minDate: number = 0): Promise<SearchResult> {
 	if (movie) {
-		return await moviePossHash(name, originalName);
+		return await moviePossHash(name, originalName, minDate);
 	} else {
-		return await SeriePossHash(name, originalName);
+		return await SeriePossHash(name, originalName, minDate);
 	}
 }
 
@@ -57,7 +57,7 @@ function goodName(name: string, originalName: string, possSel: string): string {
 const execAsync = util.promisify(exec);
 /////////////////////////////////////////////////////////////////////////////////
 // Fonction servant à compléter la recherche de path si nécéssaire
-export async function completePath(name: string, movie: boolean, tempPath:string): Promise<string> {
+export async function completePath(name: string, movie: boolean, tempPath: string): Promise<string> {
 	const excludedExtensions = ["nfo", "txt", "jpg", "sfv"];
 	let probability = { percent: 0, content: "", type: "" };
 	let contentPath = tempPath;

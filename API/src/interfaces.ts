@@ -6,9 +6,10 @@ export interface MediaItem {
 	name: string;
 	media: boolean;
 	path: string;
-	percent:number;
+	percent: number;
 	date: string;
-	seasons: Record<string, any>
+	seasons: Record<string, any>;
+	user?: string;
 }
 
 export interface DataStructure {
@@ -20,18 +21,18 @@ export interface DataStructure {
 /////////////////////////////////////////////////////////////////////////////////
 // interface spec watcher
 export interface InfoSpec {
-	cpu: string, 
+	cpu: string,
 	fan: string,
 	ram: string,
 	storage: string
 }
 
 export interface SpecItem {
-	cpu:string,
-	fan:string,
+	cpu: string,
+	fan: string,
 	ram: string,
 	storage: string
-	dlSpeed:string,
+	dlSpeed: string,
 	vpnActive: boolean,
 	nbUser: string
 }
@@ -48,14 +49,14 @@ export interface NameVpn {
 export interface SearchResult {
 	hash: string;
 	percent: number;
-	name : string;
+	name: string;
 }
 
 /////////////////////////////////////////////////////////////////////////////////
 // interface tools
 export interface FileSystemItem {
-    name: string;
-    type: 'file' | 'directory';
+	name: string;
+	type: 'file' | 'directory';
 }
 
 /////////////////////////////////////////////////////////////////////////////////

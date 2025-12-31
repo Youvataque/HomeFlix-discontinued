@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 import { DataStructure } from '../interfaces.js';
-import { db, writeTheTime } from '../tools.js';
+import { db, writeTheTime, parseFormattedDate } from '../tools.js';
 import chalk from 'chalk';
 import { setTimeout as sleep } from 'timers/promises';
 import { contentBestHash } from '../pathSystem.js';
@@ -12,9 +12,9 @@ dotenv.config();
 
 /////////////////////////////////////////////////////////////////////////////////
 // fonction pour récupérer toutes les infos d'un torrent
-async function getTorrentProgress(name: string, originalName: string, movie: boolean): Promise<number | undefined> {
+async function getTorrentProgress(name: string, originalName: string, movie: boolean, minDate: number = 0): Promise<number | undefined> {
 	try {
-		const torrentHash = (await contentBestHash(name, originalName, movie)).hash;
+		const torrentHash = (await contentBestHash(name, originalName, movie, minDate)).hash;
 		if (torrentHash == "")
 			return undefined;
 		await qbittorrentAPI.post('/auth/login');
@@ -30,7 +30,7 @@ async function getTorrentProgress(name: string, originalName: string, movie: boo
 	} catch (error) {
 		writeTheTime(chalk.red(`Erreur lors de la récupération de l'état du torrent : ${error}`));
 	}
-	return undefined; 
+	return undefined;
 }
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -46,7 +46,7 @@ async function checkAndProcessQueue() {
 		for (const key in jsonData.queue) {
 			const item = jsonData.queue[key];
 			await sleep(2000);
-			const percent = await getTorrentProgress(item.title, item.originalTitle, item.media);
+			const percent = await getTorrentProgress(item.title, item.originalTitle, item.media, (item.date ? parseFormattedDate(item.date) - 13000 : 0));
 			if (percent !== undefined) {
 				item.percent = percent;
 			} else if (++countError >= 3) {
