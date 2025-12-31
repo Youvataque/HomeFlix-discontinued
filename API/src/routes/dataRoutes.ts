@@ -120,6 +120,11 @@ router.post('/editContent', authMiddleware, async (req: Request, res: Response) 
 				db.data[section][id].path = data.path;
 			}
 			writeTheTime(chalk.green(`Path mis à jour pour ${id}`));
+		} else if (action === 'updateName') {
+			if (data.name) {
+				db.data[section][id].name = data.name;
+				writeTheTime(chalk.green(`Nom mis à jour pour ${id}: ${data.name}`));
+			}
 		} else if (action === 'deleteItem') {
 			await removeFromJson(section, id, db);
 			writeTheTime(chalk.green(`Item supprimé de la db : ${id}`));
@@ -144,26 +149,26 @@ router.post('/deleteDownloading', authMiddleware, async (req: Request, res: Resp
 		const queueItem = db.data.queue[id];
 
 		if (!queueItem) {
-			return res.status(404).json({ error: 'Élément non trouvé dans la file d\'attente' });
+			// Item not found, consider it already deleted
+			return res.status(200).json({ message: 'Élément déjà supprimé ou introuvable' });
 		}
 
-		// 1. Remove from Queue in DB
+		// 1. Try to find and remove from qBittorrent (Non-blocking)
+		try {
+			const searchResult = await contentBestHash(queueItem.title, queueItem.originalTitle, queueItem.media);
+			if (searchResult && searchResult.hash) {
+				await deleteTorrentFromClient(searchResult.hash);
+				writeTheTime(chalk.green(`Torrent supprimé de qBittorrent : ${id}`));
+			} else {
+				writeTheTime(chalk.yellow(`Torrent non trouvé dans qBit pour : ${id}`));
+			}
+		} catch (qBitError) {
+			writeTheTime(chalk.yellow(`Erreur non bloquante lors de la suppression qBit : ${qBitError}`));
+		}
+
+		// 2. Remove from Queue in DB (Always execute this)
 		delete db.data.queue[id];
 		db.write();
-
-		// 2. Find and remove from qBittorrent
-		// We use the same finding logic as the watcher to ensure we target the right torrent
-		// Pass a dummy minDate since we want to find it even if it was added recently (or use 0)
-		// Actually, if it's in queue, we might want to be careful. 
-		// But assuming user wants to delete what was matched or what is currently effective.
-
-		const searchResult = await contentBestHash(queueItem.title, queueItem.originalTitle, queueItem.media);
-		if (searchResult && searchResult.hash) {
-			await deleteTorrentFromClient(searchResult.hash);
-			writeTheTime(chalk.green(`Torrent supprimé de qBittorrent et de la queue : ${id}`));
-		} else {
-			writeTheTime(chalk.yellow(`Item supprimé de la queue mais torrent non trouvé dans qBit : ${id}`));
-		}
 
 		res.status(200).json({ message: 'Téléchargement annulé et supprimé' });
 
