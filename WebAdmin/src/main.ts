@@ -46,25 +46,25 @@ app.innerHTML = `
   </div>
 
   <!-- Edit Modal -->
-  <div id="edit-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] hidden flex items-center justify-center opacity-0 transition-opacity duration-200">
+  <div id="edit-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center opacity-0 transition-opacity duration-200">
     <div class="bg-surface border border-divider rounded-xl p-6 w-full max-w-lg shadow-2xl transform scale-95 transition-transform duration-200" id="modal-content">
-        <h2 id="modal-title" class="text-xl font-bold text-white mb-6">Modifier</h2>
+        <h2 id="modal-title" class="text-xl font-bold text-text-main mb-6">Modifier</h2>
         <form id="edit-form" class="space-y-4">
             <input type="hidden" id="edit-id">
             <input type="hidden" id="edit-media-type">
             
             <div>
                 <label class="block text-text-muted text-sm mb-1 font-medium">Nom</label>
-                <input type="text" id="edit-name" class="w-full px-4 py-2 rounded-lg bg-background border border-divider text-white focus:outline-none focus:border-primary placeholder-text-muted/50 transition-colors">
+                <input type="text" id="edit-name" class="w-full px-4 py-2 rounded-lg bg-background border border-divider text-text-main focus:outline-none focus:border-primary placeholder-text-muted/50 transition-colors">
             </div>
              <div>
                 <label class="block text-text-muted text-sm mb-1 font-medium">Chemin du fichier</label>
-                <input type="text" id="edit-path" class="w-full px-4 py-2 rounded-lg bg-background border border-divider text-white focus:outline-none focus:border-primary placeholder-text-muted/50 transition-colors">
+                <input type="text" id="edit-path" class="w-full px-4 py-2 rounded-lg bg-background border border-divider text-text-main focus:outline-none focus:border-primary placeholder-text-muted/50 transition-colors">
             </div>
             
             <div id="season-container" class="hidden">
                  <label class="block text-text-muted text-sm mb-2 font-medium">Saisons (Cliquer pour supprimer)</label>
-                 <div id="season-list" class="max-h-40 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
+                 <div id="season-list" class="max-h-60 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
                     <!-- Season items injected here -->
                  </div>
             </div>
@@ -112,7 +112,20 @@ const authContainer = document.getElementById('auth-container')!;
 const dashboard = document.getElementById('dashboard')!;
 const loginForm = document.getElementById('login-form') as HTMLFormElement;
 const errorMessage = document.getElementById('error-message')!;
-const logoutBtn = document.getElementById('logout-btn')!;
+// const logoutBtn = document.getElementById('logout-btn')!; // Defined below at 116, this block was messed up.
+// Let's clean this block entirely.
+const logoutBtn = document.getElementById('logout-btn')!; // Re-adding this as it is actually used in the event listener I previously removed but should have kept? Wait.
+// I removed the duplicate listener in step 519. The original listener was at line 220.
+// Let's check where the listener is now.
+// In the current file content (step 553), the listener is absent?
+// No, looking at step 553 content, I see:
+// 293: logoutBtn.addEventListener('click', () => { ... })
+// So it IS used. Why did TS fail?
+// Ah, allow me to re-read the error.
+// "src/main.ts:115:7 - error TS6133: 'logoutBtn' is declared but its value is never read."
+// This implies the usage at line 293 might have been lost or I'm misreading the file state.
+// Let's re-read the file to be 100% sure before editing.
+
 const contentGrid = document.getElementById('content-grid')!;
 const emptyState = document.getElementById('empty-state')!;
 const tabButtons = document.querySelectorAll('.tab-btn');
@@ -137,18 +150,99 @@ function updateTabs() {
   tabButtons.forEach(btn => {
     const tab = (btn as HTMLElement).dataset.tab;
     if (tab === currentTab) {
-      btn.classList.add('bg-primary/10', 'text-primary');
-      btn.classList.remove('text-text-muted', 'hover:bg-white/5');
+      btn.classList.add('bg-primary/10', 'text-primary', 'border-primary', 'border');
+      btn.classList.remove('text-text-muted', 'hover:bg-white/5', 'border-transparent');
     } else {
-      btn.classList.remove('bg-primary/10', 'text-primary');
-      btn.classList.add('text-text-muted', 'hover:bg-white/5');
+      btn.classList.remove('bg-primary/10', 'text-primary', 'border-primary', 'border');
+      btn.classList.add('text-text-muted', 'hover:bg-white/5', 'border-transparent');
     }
   });
 }
 
-function renderContent() {
-  contentGrid.innerHTML = '';
+function createCard(item: any): HTMLDivElement {
+  const card = document.createElement('div');
+  card.className = 'group relative flex flex-col items-center cursor-pointer';
+  card.dataset.id = item.id;
 
+  const isDownloading = currentTab === 'queue';
+
+  if (!isDownloading) {
+    card.onclick = () => {
+      openEditModal(item);
+    };
+  }
+
+  card.innerHTML = getCardInnerHtml(item, isDownloading);
+
+  loadCardImage(card, item);
+
+  return card;
+}
+
+function getCardInnerHtml(item: any, isDownloading: boolean): string {
+  const deleteButtonHtml = isDownloading ?
+    `<button class="absolute top-2 right-2 z-10 p-1.5 bg-red-500 rounded-full hover:bg-red-600 transition-colors shadow-lg text-white" onclick="event.stopPropagation(); window.deleteDownloading('${item.id}')">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>` : '';
+
+  const percentBadge = item.percent !== undefined ?
+    `<div class="absolute bottom-2 right-2 px-2 py-1 bg-black/60 rounded text-xs text-white backdrop-blur-sm border border-white/10" id="badge-${item.id}">
+            ${item.percent}%
+        </div>` : '';
+
+  return `
+            <div class="w-full aspect-2/3 bg-surface rounded-lg shadow-lg overflow-hidden relative mb-3 ring-1 ring-white/5 group-hover:ring-primary/50 transition-all duration-300">
+                <div class="absolute inset-0 flex items-center justify-center text-text-muted/20 animate-pulse skeleton">Loading...</div>
+                <img id="img-${item.id}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 opacity-0" />
+                <div class="absolute inset-0 bg-linear-to-t from-black/80 via-transparent to-transparent opacity-60"></div>
+                ${deleteButtonHtml}
+                ${percentBadge}
+            </div>
+            <h3 class="text-text-main text-center text-sm font-medium w-full truncate px-2 group-hover:text-primary transition-colors" id="title-${item.id}">${item.title || item.name}</h3>
+        `;
+}
+
+function updateCard(card: HTMLDivElement, item: any) {
+  const titleEl = card.querySelector(`#title-${item.id}`);
+  if (titleEl && titleEl.textContent !== (item.title || item.name)) {
+    titleEl.textContent = item.title || item.name;
+  }
+
+  if (item.percent !== undefined) {
+    const badge = card.querySelector(`#badge-${item.id}`);
+    if (badge) {
+      badge.textContent = `${item.percent}%`;
+    }
+  }
+}
+
+async function loadCardImage(card: HTMLDivElement, item: any) {
+  const isMovie = currentTab === 'movie' || (currentTab === 'queue' && (item.media === true || item.media === undefined && true));
+  const posterUrl = await TmdbService.getPosterPath(item.id, isMovie);
+  const img = card.querySelector(`img#img-${item.id}`) as HTMLImageElement;
+  if (img) {
+    if (posterUrl) {
+      img.src = posterUrl;
+      img.onload = () => {
+        img.classList.remove('opacity-0');
+        const skel = card.querySelector('.skeleton');
+        if (skel) skel.remove();
+      };
+    } else {
+      img.parentElement!.classList.add('bg-surface');
+      const fallback = document.createElement('div');
+      fallback.className = 'absolute inset-0 flex flex-col items-center justify-center text-text-muted p-4 text-center';
+      fallback.innerHTML = `
+            <svg class="w-10 h-10 mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+            <span class="text-xs">No Image</span>`;
+      img.replaceWith(fallback);
+    }
+  }
+}
+
+function renderContent() {
   if (!contentData) {
     contentGrid.innerHTML = `<div class="col-span-full text-center text-red-500 bg-red-500/10 p-4 rounded-lg">
             <p class="font-bold">Erreur de chargement des données</p>
@@ -158,79 +252,39 @@ function renderContent() {
   }
 
   const itemsMap = contentData[currentTab];
-  // Convert Record<string, MediaItem> to Array and sort by date desc
   const items = Object.entries(itemsMap || {})
-    .map(([id, item]) => ({ ...item, id })) // Ensure ID is part of object if not already
+    .map(([id, item]) => ({ ...item, id }))
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   if (items.length === 0) {
     emptyState.classList.remove('hidden');
+    contentGrid.innerHTML = '';
     return;
   } else {
     emptyState.classList.add('hidden');
   }
 
-  items.forEach(async (item) => {
-    const card = document.createElement('div');
-    card.className = 'group relative flex flex-col items-center cursor-pointer'; // Added cursor-pointer
-
-    // Check if it's a downloading item
-    const isDownloading = currentTab === 'queue';
-
-    // Different click action based on tab
-    if (!isDownloading) {
-      card.onclick = () => {
-        console.log("Card clicked:", item);
-        openEditModal(item);
-      };
-    }
-
-    // Placeholder skeleton
-    const deleteButtonHtml = isDownloading ?
-      `<button class="absolute top-2 right-2 z-10 p-1.5 bg-red-500 rounded-full hover:bg-red-600 transition-colors shadow-lg text-white" onclick="event.stopPropagation(); window.deleteDownloading('${item.id}')">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-        </button>` : '';
-
-    const percentBadge = item.percent !== undefined ?
-      `<div class="absolute bottom-2 right-2 px-2 py-1 bg-black/60 rounded text-xs text-white backdrop-blur-sm border border-white/10">
-            ${item.percent}%
-        </div>` : '';
-
-    card.innerHTML = `
-            <div class="w-full aspect-2/3 bg-surface rounded-lg shadow-lg overflow-hidden relative mb-3 ring-1 ring-white/5 group-hover:ring-primary/50 transition-all duration-300">
-                <div class="absolute inset-0 flex items-center justify-center text-text-muted/20 animate-pulse">Loading...</div>
-                <img id="img-${item.id}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 opacity-0" />
-                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60"></div>
-                ${deleteButtonHtml}
-                ${percentBadge}
-            </div>
-            <h3 class="text-text-main text-center text-sm font-medium w-full truncate px-2 group-hover:text-primary transition-colors">${item.title || item.name}</h3>
-        `;
-    contentGrid.appendChild(card);
-
-    // Lazy load image from TMDB
-    const isMovie = currentTab === 'movie' || (currentTab === 'queue' && (item.media === true || item.media === undefined && true)); // Default to movie if undefined in queue for image, or checking type
-
-    const posterUrl = await TmdbService.getPosterPath(item.id, isMovie);
-
-    const img = card.querySelector(`img#img-${item.id}`) as HTMLImageElement;
-    if (img) {
-      if (posterUrl) {
-        img.src = posterUrl;
-        img.onload = () => img.classList.remove('opacity-0');
-      } else {
-        img.parentElement!.classList.add('bg-surface');
-        const fallback = document.createElement('div');
-        fallback.className = 'absolute inset-0 flex flex-col items-center justify-center text-text-muted p-4 text-center';
-        fallback.innerHTML = `
-            <svg class="w-10 h-10 mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-            <span class="text-xs">No Image</span>`;
-        img.replaceWith(fallback);
-      }
+  const existingNodes = new Map<string, HTMLDivElement>();
+  Array.from(contentGrid.children).forEach(child => {
+    if (child instanceof HTMLDivElement && child.dataset.id) {
+      existingNodes.set(child.dataset.id, child);
+    } else {
+      child.remove();
     }
   });
+
+  items.forEach(item => {
+    let card = existingNodes.get(item.id);
+    if (card) {
+      updateCard(card, item);
+      existingNodes.delete(item.id);
+    } else {
+      card = createCard(item);
+    }
+    contentGrid.appendChild(card);
+  });
+
+  existingNodes.forEach(node => node.remove());
 }
 
 async function loadData() {
@@ -239,11 +293,29 @@ async function loadData() {
     renderContent();
   } catch (e: any) {
     console.error("Error loading data:", e);
-    (window as any).lastError = e;
-    contentGrid.innerHTML = `<div class="col-span-full text-center text-red-500 bg-red-500/10 p-4 rounded-lg">
-            <p class="font-bold">Erreur de chargement des données</p>
-            <p class="text-sm mt-2">${e.message}</p>
-        </div>`;
+    if (!contentData) {
+      (window as any).lastError = e;
+      contentGrid.innerHTML = `<div class="col-span-full text-center text-red-500 bg-red-500/10 p-4 rounded-lg">
+                <p class="font-bold">Erreur de chargement des données</p>
+                <p class="text-sm mt-2">${e.message}</p>
+            </div>`;
+    }
+  }
+}
+
+let refreshInterval: any = null;
+
+function startAutoRefresh() {
+  if (refreshInterval) clearInterval(refreshInterval);
+  refreshInterval = setInterval(() => {
+    loadData();
+  }, 5000);
+}
+
+function stopAutoRefresh() {
+  if (refreshInterval) {
+    clearInterval(refreshInterval);
+    refreshInterval = null;
   }
 }
 
@@ -267,7 +339,9 @@ authService.addListener(async (user) => {
     dashboard.style.display = 'block';
     updateTabs();
     loadData(); // Fetch data on login
+    startAutoRefresh(); // Start polling
   } else {
+    stopAutoRefresh(); // Stop polling
     dashboard.style.display = 'none';
     authContainer.style.display = 'flex';
     contentData = null; // Clear data on logout
@@ -291,6 +365,11 @@ loginForm.addEventListener('submit', async (e) => {
   }
 });
 
+// Logout Listener
+logoutBtn.addEventListener('click', () => {
+  authService.logout();
+});
+
 // --- Modal & Action Functions ---
 
 function openEditModal(item: any) {
@@ -305,7 +384,12 @@ function openEditModal(item: any) {
 
   editTitle.textContent = `Modifier : ${item.title || item.name}`;
   editNameInput.value = item.name || item.title || '';
+  editNameInput.classList.add('focus:border-primary', 'focus:ring-1', 'focus:ring-primary/50'); // Ensure focus style
+
   editPathInput.value = item.path || '';
+  editPathInput.classList.remove('hidden'); // Default show
+  (editPathInput.previousElementSibling as HTMLElement).classList.remove('hidden'); // Label
+
   editIdInput.value = item.id;
   editMediaTypeInput.value = currentTab === 'movie' ? 'true' : 'false';
 
@@ -313,18 +397,117 @@ function openEditModal(item: any) {
   if (currentTab === 'tv' && item.seasons) {
     seasonContainer.classList.remove('hidden');
     seasonList.innerHTML = '';
-    Object.keys(item.seasons).forEach(seasonKey => {
-      const div = document.createElement('div');
-      div.className = 'flex justify-between items-center p-2 bg-background rounded-lg border border-divider/50 hover:border-red-500/50 transition-colors group cursor-pointer';
-      div.innerHTML = `
-                <span class="text-sm text-text-main">Saison ${seasonKey}</span>
-                <span class="text-xs text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">Supprimer</span>
-            `;
-      div.onclick = () => deleteSeason(item.id, seasonKey);
-      seasonList.appendChild(div);
+
+    // Hide global path input for Series as they use episode paths
+    editPathInput.classList.add('hidden');
+    (editPathInput.previousElementSibling as HTMLElement).classList.add('hidden');
+
+    // Add Season UI
+    const addSeasonDiv = document.createElement('div');
+    addSeasonDiv.className = 'mb-4 border-b border-divider/30 pb-4';
+    addSeasonDiv.innerHTML = `
+        <button type="button" id="toggle-add-season-btn" class="text-sm text-primary font-medium hover:underline mb-2 flex items-center gap-1">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+            Ajouter une saison manuellement
+        </button>
+        <div id="add-season-form" class="hidden space-y-3 bg-surface/30 p-3 rounded-lg border border-divider">
+            <div>
+                <label class="block text-xs text-text-muted mb-1">Numéro de saison</label>
+                <input type="number" id="new-season-num" class="w-full px-2 py-1.5 text-sm rounded bg-background border border-divider text-main focus:outline-none focus:border-primary placeholder-text-muted/30" placeholder="ex: 3">
+            </div>
+            <div>
+                <label class="block text-xs text-text-muted mb-1">Chemin du dossier serveur</label>
+                <input type="text" id="new-season-path" class="w-full px-2 py-1.5 text-sm rounded bg-background border border-divider text-main focus:outline-none focus:border-primary placeholder-text-muted/30" placeholder="/mnt/series/ma_serie/saison_3">
+            </div>
+            <button type="button" id="submit-add-season" class="w-full py-1.5 bg-primary/20 text-primary hover:bg-primary/30 rounded font-medium text-sm transition-colors">Scanner et Ajouter</button>
+        </div>
+    `;
+    seasonList.prepend(addSeasonDiv);
+
+    const toggleBtn = addSeasonDiv.querySelector('#toggle-add-season-btn') as HTMLButtonElement;
+    const formDiv = addSeasonDiv.querySelector('#add-season-form') as HTMLDivElement;
+    const submitBtn = addSeasonDiv.querySelector('#submit-add-season') as HTMLButtonElement;
+    const numInput = addSeasonDiv.querySelector('#new-season-num') as HTMLInputElement;
+    const pathInput = addSeasonDiv.querySelector('#new-season-path') as HTMLInputElement;
+
+    toggleBtn.onclick = () => formDiv.classList.toggle('hidden');
+
+    submitBtn.onclick = async () => {
+      const num = parseInt(numInput.value);
+      const path = pathInput.value.trim();
+      if (!num || !path) {
+        alert('Veuillez remplir le numéro et le chemin.');
+        return;
+      }
+      await addSeason(item.id, num, path);
+    };
+
+    Object.keys(item.seasons).sort().forEach(seasonKey => {
+      const seasonData = item.seasons[seasonKey];
+      const paths = seasonData.paths || []; // array of strings
+
+      const seasonDiv = document.createElement('div');
+      seasonDiv.className = 'mb-2 rounded-lg border border-divider/30 overflow-hidden';
+
+      const header = document.createElement('div');
+      header.className = 'p-3 bg-background flex justify-between items-center cursor-pointer hover:bg-white/5 transition-colors';
+      header.innerHTML = `<span class="font-medium text-primary">Saison ${seasonKey.replace('S', '')}</span> <span class="text-xs text-text-muted">${paths.length} épisodes</span>`;
+
+      const episodesDiv = document.createElement('div');
+      episodesDiv.className = 'hidden p-3 space-y-3 bg-surface/50 border-t border-divider/30';
+
+      // Toggle accordion
+      header.onclick = () => episodesDiv.classList.toggle('hidden');
+
+      // Add "Delete Season" button at top of season
+      const deleteSeasonBtn = document.createElement('button');
+      deleteSeasonBtn.type = 'button';
+      deleteSeasonBtn.className = 'w-full py-1.5 mb-3 text-xs text-red-500 bg-red-500/10 hover:bg-red-500/20 rounded border border-red-500/20 transition-colors';
+      deleteSeasonBtn.innerText = `Supprimer toute la Saison ${seasonKey.replace('S', '')}`;
+      deleteSeasonBtn.onclick = (e) => { e.stopPropagation(); deleteSeason(item.id, seasonKey); };
+      episodesDiv.appendChild(deleteSeasonBtn);
+
+      // List Episodes
+      if (Array.isArray(paths)) {
+        paths.forEach((pathVal: string, index: number) => {
+          const epRow = document.createElement('div');
+          epRow.className = 'flex gap-2 items-center';
+
+          const label = document.createElement('span');
+          label.className = 'text-xs text-text-muted w-8 shrink-0';
+          label.innerText = `Ep ${index + 1}`;
+
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.value = pathVal;
+          input.className = 'flex-1 min-w-0 px-2 py-1.5 text-sm rounded bg-background border border-divider text-main focus:outline-none focus:border-primary placeholder-text-muted/30 transition-colors';
+
+          const saveBtn = document.createElement('button');
+          saveBtn.type = 'button';
+          saveBtn.innerHTML = `<svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`;
+          saveBtn.className = 'p-1.5 hover:bg-primary/10 rounded transition-colors';
+          saveBtn.title = 'Sauvegarder le chemin';
+          saveBtn.onclick = () => updateEpisode(item.id, seasonKey.replace('S', ''), index + 1, input.value);
+
+          const delEpBtn = document.createElement('button');
+          delEpBtn.type = 'button';
+          delEpBtn.innerHTML = `<svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>`;
+          delEpBtn.className = 'p-1.5 hover:bg-red-500/10 rounded transition-colors';
+          delEpBtn.title = 'Supprimer l\'épisode';
+          delEpBtn.onclick = () => deleteEpisode(item.id, seasonKey.replace('S', ''), index + 1);
+
+          epRow.append(label, input, saveBtn, delEpBtn);
+          episodesDiv.appendChild(epRow);
+        });
+      }
+
+      seasonDiv.append(header, episodesDiv);
+      seasonList.appendChild(seasonDiv);
     });
   } else {
     seasonContainer.classList.add('hidden');
+    editPathInput.classList.remove('hidden');
+    (editPathInput.previousElementSibling as HTMLElement).classList.remove('hidden');
   }
 }
 
@@ -348,10 +531,54 @@ function closeEditModal() {
   }
 };
 
+async function addSeason(itemId: string, seasonNum: number, folderPath: string) {
+  try {
+    const res = await ApiService.editContent(itemId, false, 'addSeason', {
+      seasonNumber: seasonNum,
+      folderPath: folderPath
+    });
+    alert(res.message);
+    closeEditModal();
+    await loadData();
+  } catch (e: any) {
+    alert(e.message);
+  }
+}
+
 async function deleteSeason(itemId: string, seasonKey: string) {
   if (!confirm(`Supprimer la Saison ${seasonKey} ?`)) return;
   try {
     await ApiService.editContent(itemId, false, 'removeSeason', { seasonKey });
+    // Don't close modal, just reload data and re-render modal content? 
+    // For simplicity, close and reload
+    closeEditModal();
+    await loadData();
+  } catch (e: any) {
+    alert(e.message);
+  }
+}
+
+async function updateEpisode(itemId: string, seasonNum: string, episodeNum: number, newPath: string) {
+  try {
+    await ApiService.editContent(itemId, false, 'updateEpisodePath', {
+      season: parseInt(seasonNum),
+      episode: episodeNum,
+      newPath
+    });
+    // Feedback visual?
+    alert('Chemin mis à jour !');
+  } catch (e: any) {
+    alert(e.message);
+  }
+}
+
+async function deleteEpisode(itemId: string, seasonNum: string, episodeNum: number) {
+  if (!confirm(`Supprimer l'épisode ${episodeNum} ?`)) return;
+  try {
+    await ApiService.editContent(itemId, false, 'removeEpisode', {
+      season: parseInt(seasonNum),
+      episode: episodeNum
+    });
     closeEditModal();
     await loadData();
   } catch (e: any) {

@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import fs from 'fs';
 import dotenv from 'dotenv';
-import { db, getActualTime, getMimeType, specDb, writeTheTime } from "../tools.js";
+import { db, getActualTime, getMimeType, specDb, writeTheTime, scanDirectory } from "../tools.js";
 import authMiddleware from './authMiddleware.js';
 import { DataStructure, manualDatas, SearchInfos } from '../interfaces.js';
 import chalk from 'chalk';
@@ -107,15 +107,47 @@ router.post('/editContent', authMiddleware, async (req: Request, res: Response) 
 		}
 
 		if (action === 'removeSeason') {
-			// data is expected to be info like { seasonKey: 'S01' }
 			const seasonKey = data.seasonKey;
 			if (db.data[section][id].seasons && db.data[section][id].seasons[seasonKey]) {
 				delete db.data[section][id].seasons[seasonKey];
 				writeTheTime(chalk.green(`Saison ${seasonKey} retirée pour ${id}`));
 			}
+		} else if (action === 'addSeason') {
+			const { seasonNumber, folderPath } = data;
+			// seasonNumber is number, convert to string "S5", "S12" etc. without padding as per user request
+			const seasonKey = 'S' + seasonNumber;
+
+			writeTheTime(chalk.blue(`Début du scan pour ${id} saison ${seasonKey} dans : ${folderPath}`));
+
+			let videoFiles: string[] = [];
+			try {
+				videoFiles = scanDirectory(folderPath);
+			} catch (e: any) {
+				writeTheTime(chalk.red(`Erreur scan : ${e.message}`));
+				return res.status(400).json({ error: e.message });
+			}
+
+			if (videoFiles.length === 0) {
+				writeTheTime(chalk.yellow(`Aucun fichier vidéo trouvé dans ${folderPath}`));
+				return res.status(200).json({ message: `Saison ${seasonKey} ajoutée mais AUCUN épisode trouvé dans le dossier.` });
+			}
+
+			if (!db.data[section][id].seasons) {
+				db.data[section][id].seasons = {};
+			}
+
+			db.data[section][id].seasons[seasonKey] = {
+				paths: videoFiles,
+				complete: true,
+				size: videoFiles.length,
+				episode: [-1],
+				title: `Saison ${seasonNumber}`
+			};
+			db.write();
+			writeTheTime(chalk.green(`Saison ${seasonKey} ajoutée pour ${id} avec ${videoFiles.length} épisodes`));
+			res.status(200).json({ message: `Saison ${seasonKey} ajoutée avec succès (${videoFiles.length} épisodes trouvés).` });
+			return; // Return here since we sent response
 		} else if (action === 'updatePath') {
-			// data is expected to be object with new path info, simple implementation: set path
-			// In a real scenario, we might need more complex logic depending on what exactly needs update
 			if (media && data.path) {
 				db.data[section][id].path = data.path;
 			}
@@ -124,6 +156,20 @@ router.post('/editContent', authMiddleware, async (req: Request, res: Response) 
 			if (data.name) {
 				db.data[section][id].name = data.name;
 				writeTheTime(chalk.green(`Nom mis à jour pour ${id}: ${data.name}`));
+			}
+		} else if (action === 'updateEpisodePath') {
+			const { season, episode, newPath } = data;
+			const seasonKey = 'S' + season;
+			if (db.data.tv[id].seasons[seasonKey] && db.data.tv[id].seasons[seasonKey].paths) {
+				db.data.tv[id].seasons[seasonKey].paths[episode - 1] = newPath;
+				writeTheTime(chalk.green(`Path épisode mis à jour pour ${id} S${season}E${episode}`));
+			}
+		} else if (action === 'removeEpisode') {
+			const { season, episode } = data;
+			const seasonKey = 'S' + season;
+			if (db.data.tv[id].seasons[seasonKey] && db.data.tv[id].seasons[seasonKey].paths) {
+				db.data.tv[id].seasons[seasonKey].paths[episode - 1] = "";
+				writeTheTime(chalk.green(`Episode retiré (path vidé) pour ${id} S${season}E${episode}`));
 			}
 		} else if (action === 'deleteItem') {
 			await removeFromJson(section, id, db);

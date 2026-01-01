@@ -20,12 +20,12 @@
 
 a {
   font-weight: 500;
-  color: #646cff;
+  color: #10DFA8;
   text-decoration: inherit;
 }
 
 a:hover {
-  color: #535bf2;
+  color: #0EC897;
 }
 
 body {
@@ -56,7 +56,7 @@ h1 {
 }
 
 .logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
+  filter: drop-shadow(0 0 2em #10DFA8aa);
 }
 
 .logo.vanilla:hover {
@@ -84,12 +84,13 @@ button {
 }
 
 button:hover {
-  border-color: #646cff;
+  border-color: #10DFA8;
 }
 
 button:focus,
 button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  outline: 2px solid #10DFA8;
+  outline-offset: 2px;
 }
 
 @media (prefers-color-scheme: light) {
@@ -99,7 +100,7 @@ button:focus-visible {
   }
 
   a:hover {
-    color: #747bff;
+    color: #10DFA8;
   }
 
   button {

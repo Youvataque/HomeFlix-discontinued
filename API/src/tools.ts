@@ -78,6 +78,46 @@ export function extractTitle(name: string): string {
 }
 
 /////////////////////////////////////////////////////////////////////////////////
+// Scanne un dossier pour trouver les fichiers vidéo
+import fs from 'fs';
+import path from 'path';
+
+export function scanDirectory(dirPath: string): string[] {
+    if (!fs.existsSync(dirPath)) {
+        throw new Error(`Le dossier '${dirPath}' n'existe pas.`);
+    }
+
+    const files = fs.readdirSync(dirPath);
+    const videoExtensions = ['.mp4', '.mkv', '.avi', '.mov', '.webm', '.flv'];
+
+    let videoFiles: string[] = [];
+
+    function scan(directory: string) {
+        const items = fs.readdirSync(directory);
+        items.forEach(item => {
+            const fullPath = path.join(directory, item);
+            const stat = fs.statSync(fullPath);
+            if (stat.isDirectory()) {
+                scan(fullPath);
+            } else {
+                const ext = path.extname(item).toLowerCase();
+                if (videoExtensions.includes(ext)) {
+                    videoFiles.push(fullPath);
+                }
+            }
+        });
+    }
+
+    try {
+        scan(dirPath);
+    } catch (e: any) {
+        throw new Error(`Erreur lors du scan de '${dirPath}': ${e.message}`);
+    }
+
+    return videoFiles.sort();
+}
+
+/////////////////////////////////////////////////////////////////////////////////
 // extrait les informations d'un nom de fichier
 export function extractInfo(name: string): string {
     trashWord.forEach(keyword => {
@@ -104,6 +144,33 @@ export function extractInfo(name: string): string {
     const temp = [title, season, episode].filter(Boolean).join(' ').trim();
     return temp;
 }
+
+// extrait les informations d'un nom de fichier sous forme d'objet
+export function extractParsedInfo(name: string): { title: string, season: string, episode: string } {
+    trashWord.forEach(keyword => {
+        const regex = keyword instanceof RegExp ? keyword : new RegExp(`\\b${keyword}\\b`, 'gi');
+        name = name.replace(regex, '');
+    });
+    const match = name.match(/s(\d{1,2})[.\-_ ]?e(\d{1,2})|s(\d{1,2})/i);
+    let season = "";
+    let episode = "";
+    let title = "";
+
+    if (match) {
+        if (match[1] && match[2]) {
+            season = `s${match[1].padStart(2, '0')}`;
+            episode = `e${match[2].padStart(2, '0')}`;
+        } else if (match[3]) {
+            season = `s${match[3].padStart(2, '0')}`;
+        }
+        const matchStartIndex = name.indexOf(match[0]);
+        title = name.substring(0, matchStartIndex).trim();
+    } else {
+        title = name.trim();
+    }
+    return { title: cleanDuplicateWords(title), season, episode };
+}
+
 
 /////////////////////////////////////////////////////////////////////////////////
 // vérifie si le titre est un film

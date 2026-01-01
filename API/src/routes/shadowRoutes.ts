@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import dotenv from 'dotenv';
 import authMiddleware from './authMiddleware.js';
-import { fetchSourceFunc, fetchSrcUrl, writeTheTime } from '../tools.js';
+import { fetchSourceFunc, fetchSrcUrl, writeTheTime, db, getActualTime, isMovie, extractParsedInfo } from '../tools.js';
 import path from 'path';
 import fs from 'fs';
 import axios from 'axios';
@@ -28,7 +28,7 @@ router.get('/fetchTorrentContent', authMiddleware, async (req: Request, res: Res
 /////////////////////////////////////////////////////////////////////////////////
 // Route pour récupérer le requète de téléchargement du content
 router.post('/contentDl', authMiddleware, async (req: Request, res: Response) => {
-	const { id, filename } = req.body; 
+	const { id, filename } = req.body;
 
 	if (!id) {
 		writeTheTime(chalk.red('L\'id du fichier est requise.'));
@@ -80,6 +80,31 @@ router.post('/contentDl', authMiddleware, async (req: Request, res: Response) =>
 		response.data.pipe(writer);
 		writer.on('finish', () => {
 			writeTheTime(chalk.green('Fichier téléchargé avec succès.'));
+
+			try {
+				const info = extractParsedInfo(finalFilename);
+				const isMediaMovie = isMovie(info.title);
+
+				db.read();
+				if (!db.data.queue[id]) {
+					db.data.queue[id] = {
+						title: info.title,
+						originalTitle: info.title,
+						name: info.title,
+						media: isMediaMovie,
+						percent: 0,
+						path: "",
+						date: getActualTime(),
+						seasons: info.season ? { [info.season]: { paths: [] } } : {},
+						user: req.user?.uid
+					};
+					db.write();
+					writeTheTime(chalk.green(`Ajouté à la file d'attente DB : ${info.title}`));
+				}
+			} catch (dbErr) {
+				writeTheTime(chalk.red(`Erreur ajout DB : ${dbErr}`));
+			}
+
 			return res.status(200).json({ message: 'Fichier téléchargé avec succès.' });
 		});
 		writer.on('error', (err) => {

@@ -28,7 +28,7 @@ export const ApiService = {
         }
     },
 
-    async editContent(id: string, media: boolean, action: string, data: any): Promise<void> {
+    async editContent(id: string, media: boolean, action: string, data: any): Promise<any> {
         const user = auth.currentUser;
         if (!user) throw new Error("User not authenticated");
         const token = await user.getIdToken();
@@ -43,8 +43,10 @@ export const ApiService = {
         });
 
         if (!response.ok) {
-            throw new Error(`Failed to edit content: ${response.statusText}`);
+            const errData = await response.json().catch(() => ({}));
+            throw new Error(errData.message || errData.error || `Failed to edit content: ${response.statusText}`);
         }
+        return await response.json();
     },
 
     async deleteDownloading(id: string): Promise<void> {
