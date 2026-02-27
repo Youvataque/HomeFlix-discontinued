@@ -74,6 +74,9 @@ router.post('/contentDl', authMiddleware, async (req: Request, res: Response) =>
 			finalFilename += '.torrent';
 		}
 
+		// Sanitize filename: replace path separators and invalid characters
+		finalFilename = finalFilename.replace(/[/\\|<>:"?*]/g, '-').replace(/-{2,}/g, '-');
+
 		const filePath = path.resolve(__dirname, process.env.TORRENT_FOLDER ?? "", finalFilename);
 		const writer = fs.createWriteStream(filePath);
 
