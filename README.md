@@ -1,3 +1,14 @@
+# ⚠️ PROJET OBSOLÈTE (DISCONTINUED)
+
+**Note** : Ce projet n'est plus maintenu.
+
+L'approche monolithique de HomeFlix (gestion directe des trackers et parsing manuel des fichiers) est devenue trop complexe à maintenir face à l'évolution des standards. Pour une solution robuste et automatisée, il est recommandé de se tourner vers la suite "Arr" (Radarr, Sonarr, Prowlarr) couplée à Jellyfin.
+
+**Vers HomeFlix V2 :** L'Orchestrateur d'Expérience
+
+Une deuxième version de HomeFlix est en réflexion. Ce ne sera plus un moteur autonome, mais une interface unifiée et temps réel conçue pour piloter la suite "Arr" (Sonarr, Radarr, Prowlarr). Si abandonner le moteur initial est un pincement au cœur, c'est surtout l'opportunité de créer un outil enfin maintenable qui comble un vide majeur : offrir une UI centralisée, réactive et intuitive, telle que HomeFlix l'avait promis sur le papier.
+
+---
 # HomeFlix
 
 Dans le but d’élargir mes compétences, j’ai développé HomeFlix, une application complète permettant de télécharger et de visionner du contenu vidéo (films, séries, documentaires) à partir d’une source distante. L’objectif est d’offrir une expérience utilisateur fluide, moderne et intuitive.
